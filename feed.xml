@@ -1,0 +1,1240 @@
+<?xml version="1.0"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>JBake</title>
+    <link>http://stupidplebs.com</link>
+    <atom:link href="http://stupidplebs.com/feed.xml" rel="self" type="application/rss+xml" />
+    <description>JBake Bootstrap Template</description>
+    <language>en-gb</language>
+    <pubDate>Wed, 15 Apr 2015 00:17:34 -0400</pubDate>
+    <lastBuildDate>Wed, 15 Apr 2015 00:17:34 -0400</lastBuildDate>
+
+    
+    <item>
+      <title>Negative Tests for Regular Expressions</title>
+      <link>http://stupidplebs.com/blog/2015/negatively-testing-regular-expressions.html</link>
+      <pubDate>Thu, 2 Apr 2015 00:00:00 -0400</pubDate>
+      <guid isPermaLink="false">blog/2015/negatively-testing-regular-expressions.html</guid>
+      <description>
+      
+In the last post I discussed generating structured random inputs using RandomStringBuilder.  This is all well and good for tests that we expect to pass, but what about negatively testing inputs?  That is, testing inputs that should fail.  For sufficiently complex regular expressions, it&apos;s quite easy to introduce an unwanted quantifier or pattern.  To revisit the Canadian postal code regular expression from prior posts, it&apos;s a subtle mistake to inadvertently change
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;/(?i)^([A-Z][0-9][A-Z])(?:[ -]?([0-9][A-Z][0-9]))?$/&lt;/code&gt;&lt;/pre&gt;
+
+to include the 1-or-more &lt;b&gt;+&lt;/b&gt; quantifier:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;/(?i)^([A-Z]+[0-9][A-Z])(?:[ -]?([0-9][A-Z][0-9]))?$/&lt;/code&gt;&lt;/pre&gt;
+&lt;!--break--&gt;
+This would make inputs like &quot;KK1A 0B1&quot; valid whereas it is clearly invalid.  To deal with negatively testing regular expressions, I added a class named RegexBuilder to the RandomStringBuilder library, available here:
+
+https://github.com/stephenkhess/RandomStringBuilder
+
+A quick disclaimer, RegexBuilder is &lt;b&gt;not&lt;/b&gt; to be able to generate very complicated regular expressions, but it&apos;s useful for building optional and quantified literal values and character ranges.  
+
+Once again, here&apos;s the class under test:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;class CanadianPostalCodeFormatter {
+    def format(input) {
+        // regex that captures the forward sortation area (the first part),
+        //  the optional local delivery unit (the second part), and ignores the delimiter
+        def matcher = input =~ /(?i)^([A-Z][0-9][A-Z])(?:[ -]?([0-9][A-Z][0-9]))?$/
+        
+        if (matcher.size() &gt; 0) {
+            // return the concatenated-by-space non-null matched groups
+            matcher[0][1..2].findAll{ it }*.toUpperCase().join(&quot; &quot;)
+        }
+
+    }
+
+}&lt;/code&gt;&lt;/pre&gt;
+
+If an input doesn&apos;t match the Canadian postal code format then the method should return null.  The idea behind this approach is to create inputs that are close to being matches but do not match the regular expressions.  Here&apos;s a Spock test that generates 5000 inputs that &lt;b&gt;don&apos;t&lt;/b&gt; match either the short or extended Canadian postal code format:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;def &quot;inputs not matching Canadian postal code patterns should return null&quot;() {
+    given:
+    def formatter = new CanadianPostalCodeFormatter()
+
+    expect:
+    formatter.format(invalidInput) == null
+
+    where: &quot;create inputs that don&apos;t match short- or extended-form CA postalcode patterns&quot;
+    invalidInput &amp;lt;&amp;lt; {
+        // Spock doesn&apos;t allow variable definitions directly in the 
+        // where: block, so declare this way.
+        // Alternatively the patterns could be declared as @Shared at the class level
+        def shortFormPattern = Pattern.compile(new RegexBuilder().
+                oneLetter().oneNumber().oneLetter().
+                build())
+            
+        def longFormPattern = Pattern.compile(new RegexBuilder().
+                oneLetter().oneNumber().oneLetter().
+                zeroOrMoreCharactersOf(&quot; \t-&quot;).
+                oneNumber().oneLetter().oneNumber().
+                build())
+        
+        // generate 5000 inputs that don&apos;t match either supported input format
+        (1..5000).collect {
+            new RandomStringBuilder().
+                randomUpperLimit(5). // at most 5 characters for each call
+                atLeastOneAlphaNumeric().
+                optionalCharactersOf(&quot; \t-&quot;).
+                atLeastOneAlphaNumeric().
+                build()
+        }.findAll {
+            !(it ==~ longFormPattern)
+        }.findAll {
+            !(it ==~ shortFormPattern)
+        }
+    }()
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+When I ran this locally on my Macbook Pro, 4995 qualifying inputs were generated and executed in 0.815 seconds.  Here&apos;s a sample of the generated inputs:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;O-Xl4H
+rDXs-  RXBH
+BaZb3GS
+nRHV0
+uKr  8dB&lt;/code&gt;&lt;/pre&gt;
+
+To carry the concept to UK postal codes, RegexBuilder can be used as follows:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;new RegexBuilder().
+    betweenMAndNLetters(1, 2).
+    oneNumber().
+    optionalAlphaNumeric().
+    optionalSpace().
+    oneNumber().
+    nLetters(2).
+    build()&lt;/code&gt;&lt;/pre&gt;
+
+This will generate the regular expression: &lt;pre&gt;&lt;code&gt;[a-zA-Z]{1,2}[0-9][a-zA-Z0-9]?[ ]?[0-9][a-zA-Z]{2}&lt;/code&gt;&lt;/pre&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Building Random Strings for Generatively Testing Regular Expressions</title>
+      <link>http://stupidplebs.com/blog/2015/building-random-strings.html</link>
+      <pubDate>Fri, 27 Mar 2015 00:00:00 -0400</pubDate>
+      <guid isPermaLink="false">blog/2015/building-random-strings.html</guid>
+      <description>
+      
+After spending some time working with generating random strings for testing regular expressions, I decided to write a utility to make things easier to read and reduce the amount of code in my tests.  The library is here:
+
+https://github.com/stephenkhess/RandomStringBuilder
+&lt;!--break--&gt;
+I&apos;ll revisit the original example of formatting Canadian postal codes, so here&apos;s the class under test:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;class CanadianPostalCodeFormatter {
+    def format(input) {
+        // regex that captures the forward sortation area (the first part),
+        //  the optional local delivery unit (the second part), and ignores the delimiter
+        def matcher = input =~ /(?i)^([A-Z][0-9][A-Z])(?:[ -]?([0-9][A-Z][0-9]))?$/
+        
+        if (matcher.size() &gt; 0) {
+            // return the concatenated-by-space non-null matched groups
+            matcher[0][1..2].findAll{ it }*.toUpperCase().join(&quot; &quot;)
+        }
+
+    }
+
+}&lt;/code&gt;&lt;/pre&gt;
+
+Using RandomStringBuilder, our test of formatting extended Canadian postal codes would look like:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;class CanadianPostalCodeFormatterSpec extends Specification {
+    def &quot;valid input should return space-delimited uppercased forward sortation area and local delivery unit&quot;() {
+        given:
+        def formatter = new CanadianPostalCodeFormatter()
+        
+        and: &quot;a forward sortation area, like &apos;k1A&apos;&quot;
+        def forwardSortationArea = new RandomStringBuilder().
+            oneLetter().oneNumber().oneLetter().
+            build()
+        
+        and: &quot;a local delivery unit, like &apos;0B1&apos;&quot;
+        def localDeliveryUnit = new RandomStringBuilder().
+            oneNumber().oneLetter().oneNumber().
+            build()
+            
+        and: &quot;the concatenated input, like &apos;k1A-0B1&apos;&quot;
+        def input = new RandomStringBuilder().
+            is(forwardSortationArea).
+            optionalCharacterOf(&quot; -&quot;).
+            is(localDeliveryUnit).
+            build()
+            
+        when:
+        def output = formatter.format(input)
+
+        then:
+        output == &quot;${forwardSortationArea.toUpperCase()} ${localDeliveryUnit.toUpperCase()}&quot;
+
+        where:
+        i &amp;lt;&amp;lt; (1..100)
+
+    }
+    
+}&lt;/code&gt;&lt;/pre&gt;
+
+In this particular case, the test is run 100 times which should thoroughly exercise the letter and number ranges.  
+
+A more complicated regular expression is one that matches UK postal codes:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;^([A-Z]{1,2}[0-9][0-9A-Z]?) ?([0-9][A-Z]{2})$&lt;/code&gt;&lt;/pre&gt;
+
+RandomStringBuilder makes short work of generating test inputs and in a very readable format:
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;def outwardCode = new RandomStringGenerator.Builder().
+     atLeastOneLetter(2). // 1 or 2 letters
+     oneNumber().
+     optionalAlphaNumeric().
+     build()
+
+def inwardCode = new RandomStringGenerator.Builder().
+     oneNumber().
+     nLetters(2).
+     build()
+            
+def input = new RandomStringGenerator.Builder().
+     is(outwardCode).
+     optionalSpace().
+     is(inwardCode).
+     build()
+&lt;/code&gt;&lt;/pre&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Taking things too far: Testing @WebServlet annotations</title>
+      <link>http://stupidplebs.com/blog/2014/testing-webservlet-annotations.html</link>
+      <pubDate>Fri, 15 Aug 2014 00:00:00 -0400</pubDate>
+      <guid isPermaLink="false">blog/2014/testing-webservlet-annotations.html</guid>
+      <description>
+      
+&lt;p&gt;It&apos;s been quite awhile since I last posted but my wife and I had a kid in November and, despite my very vocal protestations, diapers trump TDD.  Today&apos;s article is a short one, but I&apos;ve found it useful ever since switching away from servlet definitions in web.xml to inline @WebServlet annotations.  It&apos;s applicable to any type of annotations, I suppose, but for me the @WebServlet annotation comes up quite a bit in my day-to-day development.  &lt;/p&gt;
+
+&lt;p&gt;First, here&apos;s our servlet class definition:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@WebServlet(
+    name=&quot;Pleb Control&quot;, 
+    description=&quot;This servlet is for keeping the plebs in check&quot;,
+    loadOnStartup=1, 
+    asyncSupported=true,
+    urlPatterns={
+        &quot;/stupidplebs/subjugateBrutually&quot;, 
+        &quot;/stupidplebs/governFairly&quot;
+    }, 
+    initParams = {
+        @WebInitParam(name=&quot;enforcementMethod1&quot;, value=&quot;the stink eye&quot;),
+        @WebInitParam(name=&quot;enforcementMethod2&quot;, value=&quot;propaganda&quot;)
+    }
+)
+public class StupidPlebServlet extends HttpServlet {
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+        // do some stuff
+    }
+}
+&lt;/code&gt;
+&lt;/pre&gt;
+&lt;!--break--&gt;
+
+&lt;p&gt;Back in the day when all your servlet and filter definitions were listed in web.xml, it was a bit cumbersome but quite possible to load web.xml in a test and verify settings using an XML parser.  Inlining your servlet and filter configurations using @WebServlet and @WebFilter annotations doesn&apos;t work with this method but fortunately Java makes it pretty easy to iterate the declared annotations for a class and perform verifications.  Here&apos;s a test in JUnit:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void webServletAnnotationShouldBeConstructedWithExpectedConfigurationSettings() {
+    // Given the first annotation (assumed to be WebServlet)
+    WebServlet annotation = (WebServlet)StupidPlebServlet.class.getDeclaredAnnotations()[0];
+    
+    // Expect
+    assertThat(annotation.name(), is(&quot;Pleb Control&quot;));
+    
+    // And
+    assertThat(annotation.description(), is(
+            &quot;This servlet is for keeping the plebs in check&quot;));
+    
+    // And the servlet should be loaded when the container starts
+    assertThat(annotation.loadOnStartup(), is(1));
+    
+    // And asynchronous processing should be supported
+    assertThat(annotation.asyncSupported(), is(true));
+    
+    // And the servlet should be mapped to 2 url patterns
+    assertThat(annotation.urlPatterns(), is(new String[]{
+            &quot;/stupidplebs/subjugateBrutually&quot;, 
+            &quot;/stupidplebs/governFairly&quot;
+    }));
+    
+    // And there should be 2 initialization parameters
+    assertThat(annotation.initParams().length, is(2));
+    assertThat(annotation.initParams()[0].name(), is(&quot;enforcementMethod1&quot;));
+    assertThat(annotation.initParams()[0].value(), is(&quot;the stink eye&quot;));
+    assertThat(annotation.initParams()[1].name(), is(&quot;enforcementMethod2&quot;));
+    assertThat(annotation.initParams()[1].value(), is(&quot;propaganda&quot;));
+}
+&lt;/code&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;Here&apos;s the same test in Spock:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;def &quot;@WebServlet annotation should be constructed with expected configuration settings&quot;() {
+    given: &quot;groovy makes it easier to find the annotation we&apos;re interested&quot;
+    def annotation = StupidPlebServlet.class.declaredAnnotations.find { it -&gt;
+        it instanceof WebServlet
+    }
+    
+    expect:
+    annotation.name() == &quot;Pleb Control&quot;
+    
+    and:
+    annotation.description() == 
+            &quot;This servlet is for keeping the plebs in check&quot;
+    
+    and: &quot;the servlet should be loaded when the container starts&quot;
+    annotation.loadOnStartup() == 1
+    
+    and: &quot;asynchronous processing should be supported&quot;
+    annotation.asyncSupported()
+    
+    and: &quot;the servlet should be mapped to 2 url patterns&quot;
+    annotation.urlPatterns() == [
+        &quot;/stupidplebs/subjugateBrutually&quot;, 
+        &quot;/stupidplebs/governFairly&quot;
+    ]
+    
+    and: &quot;there should be 2 initialization parameters&quot;
+    annotation.initParams().length == 2
+    annotation.initParams()[0].name() == &quot;enforcementMethod1&quot;
+    annotation.initParams()[0].value() == &quot;the stink eye&quot;
+    annotation.initParams()[1].name() == &quot;enforcementMethod2&quot;
+    annotation.initParams()[1].value() == &quot;propaganda&quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+This makes a very easy and convenient verification that a servlet will be loaded correctly by the container.  
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Generative Testing is Even Awesomer for Testing Regular Expressions</title>
+      <link>http://stupidplebs.com/blog/2013/regex-generative-testing.html</link>
+      <pubDate>Tue, 27 Aug 2013 00:00:00 -0400</pubDate>
+      <guid isPermaLink="false">blog/2013/regex-generative-testing.html</guid>
+      <description>
+      
+&lt;p&gt;I attended a presentation by Stu Halloway on generative testing in Clojure at Uberconf 2013 in Denver a few weeks ago and it piqued my interest.  Now I may be completely off on this (hell, I thought my coworker Sanjay stole the Lindbergh baby) but generative testing is for auto-generating tons of tests where the unit of code under test has a combinatorically prohibitive input space.  Stu gave the example of a game that tests for colored pegs in a correctly ordered sequence.  While revisiting some functionality recently that formats a string to Canadian postal code format if it matches a regular expression that allows for case-insensitivity and an optional space or hyphen delimiter, I realized that generative testing is a great technique for this functionality.&lt;/p&gt;
+&lt;!--break--&gt;
+
+&lt;p&gt;Canadian postal code is in 2 parts, the first three characters are called the &quot;forward sortation area&quot; (in letter-number-letter sequence) while the last three are called the &quot;local delivery units&quot; (in number-letter-number sequence).  For example, K8N 5W6 identifies Belleville, Ontario.  For my purposes, the local delivery unit part is optional and the delimiter can be a space or hyphen.  The output should be uppercased forward sortation area followed by a space and local delivery unit if the latter was matched.  A basic case-insensitive regex with optional delimiter is:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;([a-zA-Z][0-9][a-zA-Z])(?:[ -]?([0-9][a-zA-Z][0-9]))?&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I could also just dumbly iterate over the 140,608,000 possible inputs from &apos;a0a 0a0&apos; to &apos;Z9Z-9Z9&apos; (this is just an illustration, there aren&apos;t that many recognized Canadian postal codes), but that would take a while.  My Mac took over 4 minutes to iterate just the 17,576,000 lowercase and digit combinations.  Alternatively, I could manually generate 20 &quot;random&quot; inputs and call it a day, but what if some Hogan comes along and changes the regex removing &apos;a&apos; and &apos;A&apos; as a first character:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;([b-zB-Z][0-9][a-zA-Z])(?:[ -]?([0-9][a-zA-Z][0-9]))?&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which will completely invalidate Newfoundland and Labrador postal codes.  Unless I happened to have a test for postal codes starting with &apos;A&apos;, the unit tests would still pass, but the code now has a bug.  &lt;/p&gt;
+
+&lt;p&gt;Exhaustively testing the entire input set isn&apos;t feasible and how many manual tests is enough?  Fortunately, generative testing (assuming my understanding is correct) is a far superior approach.  The strategy is to generate random letters, numbers, and delimiters concatenated together and test that the formatter returns the output as expected.&lt;/p&gt;
+
+&lt;p&gt;I&apos;ve recently jumped on the Groovy bandwagon, so here&apos;s my class under test:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;class CanadianPostalCodeFormatter {
+    def format(input) {
+        // regex that captures the forward sortation area (the first part),
+        //  the optional local delivery unit (the second part), and ignores the delimiter
+        def matcher = input =~ /([a-zA-Z][0-9][a-zA-Z])(?:[ -]?([0-9][a-zA-Z][0-9]))?/ 
+        
+        if (matcher.size() &gt; 0) {
+            // return the concatenated-by-space non-null matched groups
+            matcher[0][1..2].findAll{ it }*.toUpperCase().join(&quot; &quot;)
+        }
+
+    }
+
+}&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now here&apos;s my Spock test:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;@ConfineMetaClassChanges(String)
+class CanadianPostalCodeFormatterSpec extends Specification {
+    // specifically call out how many tests to run so it&apos;s easily tunable
+    @Shared def numberOfTests = 10000
+    
+    @Shared def formatter = new CanadianPostalCodeFormatter()
+    @Shared def random = new Random()
+    
+    @Shared def letters = ((&apos;A&apos;..&apos;Z&apos;) + (&apos;a&apos;..&apos;z&apos;)).join()
+    @Shared def numbers = (&apos;0&apos;..&apos;9&apos;).join()
+    @Shared def delimiters = &quot; -&quot;
+
+    def setupSpec() {
+        // add a method to String that will return a random character from delegate
+        String.metaClass.randomCharacter = { -&gt;
+            delegate[ random.nextInt(delegate.length()) ]
+        }
+    }
+    
+    def &quot;valid input should return space-delimited forward sortation area and local delivery unit (if supplied)&quot;() {
+        when:
+        def actualOutput = formatter.format(input)
+
+        then:
+        expectedOutput == actualOutput
+
+        where:
+        row &amp;lt;&amp;lt; (1..numberOfTests).collect {
+            generatePostalCode()
+        }
+
+        input = row.input
+        expectedOutput = row.expectedOutput
+
+    }
+    
+    def generatePostalCode() {
+        // randomly generate either a short or long form postal code 
+        random.nextBoolean() ? generateShortForm() : generateLongForm()
+    }
+    
+    // generate a short-form CA postalcode, with just forward sortation area
+    def generateShortForm() {
+        // eg - K8N
+        def forwardSortationArea = [letters, numbers, letters]*.randomCharacter().join()
+
+        def inputPostalCode = forwardSortationArea
+        def outputPostalCode = forwardSortationArea.toUpperCase()
+            
+        // return in a map since both input and output are needed
+        [input: inputPostalCode, expectedOutput: outputPostalCode]
+        
+    }
+    
+    // generate a long-form CA postalcode, with both forward sortation area and
+    //  local delivery unit
+    def generateLongForm() {
+        // eg - K8N
+        def forwardSortationArea = [letters, numbers, letters]*.randomCharacter().join()
+        // eg - 5W6
+        def localDeliveryUnit = [numbers, letters, numbers]*.randomCharacter().join()
+                
+        def delimiter = random.nextBoolean() ? delimiters.randomCharacter() : &quot;&quot;
+        
+        def inputPostalCode = [
+            forwardSortationArea, localDeliveryUnit].join(delimiter)
+        def outputPostalCode = [
+            forwardSortationArea, localDeliveryUnit]*.toUpperCase().join(&quot; &quot;)
+            
+        // return in a map since both input and output are needed
+        [input: inputPostalCode, expectedOutput: outputPostalCode]
+            
+    }
+    
+}&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Having a variable named numberOfTests right at the top allows me to easily tune how many tests I want to run.  For illustration, I set this to 10, and the following inputs were generated:&lt;/p&gt;
+
+&lt;pre&gt;
+&lt;code&gt;A6S
+L2e
+j7Q1r9
+x8r-9f7
+M7w0B9
+i4S 0d3
+S2i5J4
+c5v6A5
+R8l
+y7J 7F5&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The value of the tuning parameter depends on the situation; enough tests to be reasonably thorough but not too many to be burdensome time-wise should be considered.  I set this value to 10,000 since the input space has pretty good coverage and isn&apos;t so long that it&apos;s noticeable.  Now if some Hogan comes along and changes the internal regex, there&apos;s a pretty good chance that one run of the tests (locally, in a CI environment, or by another developer), will catch the error as the test inputs are random (for all intents and purposes).  In fact, I removed &apos;a&apos; and &apos;A&apos; for the first character and in 15 attempts I couldn&apos;t get all 10,000 tests to pass once.&lt;/p&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Parameterized Tests are Freakin' Awesome for Unit Testing Regular Expressions</title>
+      <link>http://stupidplebs.com/blog/2013/parameterized-unit-tests.html</link>
+      <pubDate>Sun, 27 Jan 2013 00:00:00 -0500</pubDate>
+      <guid isPermaLink="false">blog/2013/parameterized-unit-tests.html</guid>
+      <description>
+      
+&lt;p&gt;I&apos;ve been looking for a good reason to use parameterized tests for awhile now and I finally discovered a great one:  testing regular expressions.  This is especially useful for case-insensitive regexes with lots of OR (|) conditions.  &lt;/p&gt;
+&lt;!--break--&gt;
+
+&lt;p&gt;Let&apos;s say we have a regex that matches the 4 main directionals, both full word and single-letter abbreviations and case-insensitive.  This regex would be:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;^(N(orth)?|S(outh)?|W(est)?|E(ast)?)$&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&apos;s pretty easy to get started testing something like this, I would want to make sure I got &quot;&lt;strong&gt;N&lt;/strong&gt;&quot; and &quot;&lt;strong&gt;North&lt;/strong&gt;&quot; covered:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void inputConsistingSolelyOfLetterNShouldMatch() {
+    // Given a string = &quot;N&quot;
+    String input = &quot;N&quot;;
+    
+    // And a matcher on directionPattern
+    Matcher matcher = directionalPattern.matcher(input);
+    
+    // Then matcher.matches should return true
+    assertThat(matcher.matches(), is(true));
+}
+
+@Test
+public void inputConsistingOfWordNorthShouldMatch() {
+    // Given a mixed case word &quot;north&quot;
+    String input = &quot;nOrTh&quot;;
+
+    // And a matcher on directionPattern
+    Matcher matcher = directionalPattern.matcher(input);
+    
+    // Then matcher.matches should return true
+    assertThat(matcher.matches(), is(true));
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But with 8 of these and a negative test, it gets pretty repetitive and if the regex contains lots of conditional matching it can become a huge pain to maintain.  Fortunately parameterized tests in jUnit make this a breeze while keeping all the test data in one place.  Here are all 8 tests plus 1 negative test in one tidy, easy-to-read place:&lt;/p&gt;
+
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@RunWith(Parameterized.class)
+public class ParameterizedRegexTest {
+    Pattern directionalPattern = Pattern.compile(&quot;^(N(orth)?|S(outh)?|W(est)?|E(ast)?)$&quot;, 
+        Pattern.CASE_INSENSITIVE);
+
+    @Parameters(name=&quot;{index}: \&quot;{0}\&quot; - {1}&quot;)
+    public static Iterable data() {
+        return Arrays.asList(new Object[][] {
+            { &quot;N&quot;, true },
+            { &quot;nOrTh&quot;, true },
+            { &quot;s&quot;, true },
+            { &quot;SOuTh&quot;, true },
+            { &quot;E&quot;, true },
+            { &quot;east&quot;, true },
+            { &quot;w&quot;, true },
+            { &quot;WEST&quot;, true },
+            { &quot;this isn&apos;t a directional&quot;, false }
+        });
+    }
+
+    private String input;
+    private Boolean expectedToMatch;
+    
+    public ParameterizedRegexTest(String input, Boolean expectedToMatch) {
+        this.input = input;
+        this.expectedToMatch = expectedToMatch;
+    }
+    
+    @Test
+    public void theDirectionalPatternMatchingOnTheInputShouldReturnWhatIsExpected() {
+        // Given a matcher on directionalPattern from the constructor input
+        Matcher matcher = directionalPattern.matcher(input);
+        
+        // Expect matcher.matches should return what&apos;s expected
+        assertThat(matcher.matches(), is(expectedToMatch));
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each &lt;code&gt;String&lt;/code&gt;/&lt;code&gt;Boolean&lt;/code&gt; combination in &lt;code&gt;data&lt;/code&gt; will be used to construct an instance of ParameterizedRegexTest and all @Test-annotated methods will be run.  &lt;/p&gt;
+
+&lt;p&gt;Here&apos;s what happens when I run my test class in Eclipse:&lt;/p&gt;
+
+&lt;p&gt;&lt;img alt=&quot;&quot; src=&quot;/images/parameterized-success.png&quot; style=&quot;width: 453px; height: 314px;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Success!  All 9 tests were generated on the fly and run by jUnit.  &lt;/p&gt;
+
+&lt;p&gt;If I screwed up and accidentally mistyped &quot;&lt;strong&gt;WEST&lt;/strong&gt;&quot; as &quot;&lt;strong&gt;WEST!&lt;/strong&gt;&quot;, I&apos;d see 1 red failure and 8 green successes:&lt;/p&gt;
+
+&lt;p&gt;&lt;img alt=&quot;&quot; src=&quot;/images/parameterized-failure.png&quot; style=&quot;width: 456px; height: 362px;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The index on the left of each test name makes it easy to see which test is broken without having to scroll thru an exhaustive list.  The &lt;code&gt;name&lt;/code&gt; parameter of the @Parameters annotation allows me to format the display of the test to something readable.  &lt;/p&gt;
+
+&lt;p&gt;Some of my more complex regular expressions are not really that complex but have up to 50 test inputs.  Parameterized tests in jUnit make maintaining all my inputs and expected results easy to read and concise.&lt;/p&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Unit-testing with Log4j</title>
+      <link>http://stupidplebs.com/blog/2012/unit-testing-log4j.html</link>
+      <pubDate>Sun, 19 Feb 2012 00:00:00 -0500</pubDate>
+      <guid isPermaLink="false">blog/2012/unit-testing-log4j.html</guid>
+      <description>
+      
+&lt;p&gt;&lt;span style=&quot;font-size:10px;&quot;&gt;&lt;em&gt;(It&apos;s been awhile since I&apos;ve last posted but I agonize over wording so it takes a few hours from start to finish to write these articles)&lt;/em&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;h3&gt;
+	Testing Log4j Output&lt;/h3&gt;
+&lt;p&gt;So you&apos;ve diligently written some thorough tests but our benevolent lord and savior, &lt;a href=&quot;http://cobertura.sourceforge.net/&quot; target=&quot;_blank&quot;&gt;Cobertura&lt;/a&gt;, that wants only good things for us informs you that those pesky conditionally-executed logging statements are uncovered.  Or maybe you just want to verify that your logging statements are being output.  If either of these statements apply to your situation, then this article is for you.  &lt;br /&gt;
+	&lt;br /&gt;
+	Before I get started, and I cannot stress this enough, &lt;strong&gt;excessive testing of log4j statements (especially DEBUG) will cause your tests to become extremely brittle!&lt;/strong&gt;  Your coworkers will become very annoyed with you if the debugging statements they&apos;re adding to diagnose a logic problem are causing tests to fail.  I&apos;ll address how to get around this later on in the section entitled &lt;a href=&quot;#beatings&quot;&gt;&quot;How to Avoid Being Beaten to Death&quot;&lt;/a&gt;. &lt;/p&gt;
+&lt;!--break--&gt;
+&lt;h3&gt;
+	The Problem&lt;/h3&gt;
+&lt;p&gt;Okay, let&apos;s get started.  Out of the box, your Logger objects have no configuration loaded by the test harness so all logging is turned off by default.  There are a few approaches to resolving this:&lt;/p&gt;
+&lt;ol&gt;
+	&lt;li&gt;
+		make all your Logger objects public&lt;/li&gt;
+	&lt;li&gt;
+		inject your Logger objects via constructor&lt;/li&gt;
+	&lt;li&gt;
+		classload your log4j configuration&lt;/li&gt;
+	&lt;li&gt;
+		accept that you&apos;re not a god and having some untested code is okay sometimes&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Don&apos;t even try the first option, it&apos;s a terrible programming practice, I feel dirty for even mentioning it.  The second option is really heavy and would require lots of refactoring, plus you&apos;d have to add tests to verify that the injected Logger is appropriately tied to the correct class, if applicable.  You could try the third option but if your log4j configuration writes to any external resources like a file or database you&apos;d incur a decent amount of setup and teardown logic.  You probably wouldn&apos;t be reading this article if the fourth approach described your lazy ass so you want an actual answer.  Fortunately, there&apos;s a fairly simple solution: programmatically setting up a log4j configuration in your test.  By grabbing the root Logger and adding a WriterAppender and level, you can direct output to an OutputStream instance which is trivial to convert to a String and parse through. &lt;/p&gt;
+&lt;h3&gt;
+	Testing All Log4j Logging&lt;/h3&gt;
+&lt;p&gt;Here&apos;s a test method I wrote that calls a factory that creates Plebeian POJO from comma-delimited strings:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void nullInputToGetInstanceShouldLogADebugAndErrorMessageReturningNull() {
+    // given
+    // if the root Logger already has some appenders, fail because our test
+    //  environment isn&apos;t what we&apos;re expecting
+    Logger rootLogger = Logger.getRootLogger();
+    if (rootLogger.getAllAppenders().hasMoreElements()) {
+        fail(&quot;Root logger already has appenders!&quot;);
+    }
+   
+    // setup the OutputStream to be written to by the logger
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    rootLogger.addAppender(new WriterAppender(new SimpleLayout(),
+            outputStream));
+    rootLogger.setLevel(Level.DEBUG);
+   
+    // when
+    Plebeian plebeian = PlebeianFactory.getInstance(null);
+   
+    // then
+    assertThat(plebeian, is(nullValue()));
+   
+    // split the output by newline, here we&apos;re taking advantage of the fact
+    //  the String.split doesn&apos;t preserve the empty string if the delimiter
+    //  appears at the end of the input
+    String[] logStatements = new String(outputStream.toByteArray())
+            .split(lineSeparator);
+    assertThat(logStatements.length, is(2));
+    assertThat(logStatements[0],
+            is(&quot;DEBUG - getInstance received input: &apos;null&apos;&quot;));
+    assertThat(logStatements[1],
+            is(&quot;ERROR - Delimited String input cannot be null&quot;));
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Note that my assertions rely on SimpleLayout so a different layout may require adjustments. The contents of my PlebeianFactory class are pretty cut-and-dry:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;public class PlebeianFactory {
+    private static Logger logger = Logger.getLogger(PlebeianFactory.class);
+   
+    public static Plebeian getInstance(String delimitedInput) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(&quot;getInstance received input: &apos;&quot; + delimitedInput + &quot;&apos;&quot;);
+        }
+   
+        if (null == delimitedInput) {
+            logger.error(&quot;Delimited String input cannot be null&quot;);
+            return null;
+        }
+   
+        String[] parts = delimitedInput.split(&quot;,&quot;);
+   
+        // I&apos;m not testing everything under the sun here, just showing
+        //  how to test log4j  
+        Plebeian plebeian = new Plebeian(parts[1], parts[2], parts[0]);
+   
+        if (logger.isDebugEnabled()) {
+            logger.debug(&quot;constructed Plebeian object: &quot; + plebeian);
+        }
+   
+        return plebeian;
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;
+	Static Loggers&lt;/h3&gt;
+&lt;p&gt;Like my example, chances are your Logger instances are static so the Appenders added in one test will exist in the next test. In unit testing, each test should be able to run independently and not depend on state set by other tests, so in this example you&apos;d need to add an @After-annotated method to your test class to perform some cleanup. In fact, failure to reset your root Logger state would result in both appenders writing to the same OutputStream, doubling the number of logging messages. Fortunately, resetting the root Logger configuration means just removing all the appenders added by your test:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@After
+public void teardown() {
+    Logger.getRootLogger().removeAllAppenders();
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;A more complicated configuration in your particular setup may require additional reset procedures.&lt;/p&gt;
+&lt;h3 id=&quot;beatings&quot;&gt;
+	How to Avoid Being Beaten to Death&lt;/h3&gt;
+&lt;p&gt;At the beginning of this post I mentioned that you&apos;ll likely drive your coworkers to violence with overuse of testing every last log4j logging event. You could just set the logging level in your tests to INFO but then you&apos;re back to less than 100% coverage if you have conditionally-executed debug logging statements. The best way I&apos;ve found to handle this scenario is to set the logging level to DEBUG in your tests, but then filter out all DEBUG-level statements before making your assertions. Here&apos;s a simple helper utility method to do so:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;&lt;code&gt;private List&amp;lt;String&amp;gt; filterOutDebugStatements(String[] statements) {
+    List&amp;lt;String&amp;gt; nonDebugStatements = new ArrayList&amp;lt;String&amp;gt;();
+    
+    for (String statement : statements) {
+        if (!statement.startsWith(&quot;DEBUG&quot;)) {
+            nonDebugStatements.add(statement);
+        }
+    }
+    
+    return nonDebugStatements;
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This has the added benefit of returning a List where splitting on newline returned an array so making all your assertions around a List context assures that you don&apos;t forget to filter first. Here&apos;s a test where we&apos;re only concerned with the non-DEBUG statements logged:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void nullInputToGetInstanceShouldReturnNullAndLogAnErrorMessage() {
+    // given
+    Logger rootLogger = Logger.getRootLogger();
+    if (rootLogger.getAllAppenders().hasMoreElements()) {
+        fail(&quot;Root logger already has appenders!&quot;);
+    }
+   
+    // setup the OutputStream to be written to by the logger
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+   
+    rootLogger.addAppender(new WriterAppender(new SimpleLayout(),
+            outputStream));
+    rootLogger.setLevel(Level.DEBUG);
+   
+    // when
+    Plebeian plebeian = PlebeianFactory.getInstance(null);
+   
+    // then
+    assertThat(plebeian, is(nullValue()));
+   
+    // split the output by newline
+    String[] allLogStatements = new String(outputStream.toByteArray())
+            .split(lineSeparator);
+   
+    List&amp;lt;String&amp;gt; nonDebugLogStatements = filterOutDebugStatements(allLogStatements);
+    
+    // verify that at least 1 DEBUG message was output (if there are any)
+    assertThat(allLogStatements.length - nonDebugLogStatements.size(),
+        is(greaterThan(0)));
+
+    assertThat(nonDebugLogStatements.size(), is(1));
+    assertThat(nonDebugLogStatements.get(0),
+            is(&quot;ERROR - Delimited String input cannot be null&quot;));
+   
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;
+	Bonus - Verifying a Class Uses the Correct Logger&lt;/h3&gt;
+&lt;p&gt;Occasionally when copying a class containing a Logger in Eclipse I&apos;ll forget to change the class the Logger instantiates from. That is, if I copied PlebeianFactory to SomeOtherFactory, my static Logger instantiation line would remain:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;private static Logger logger = Logger.getLogger(PlebeianFactory.class);&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;instead of the intended:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;private static Logger logger = Logger.getLogger(SomeOtherFactory.class);&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This would obviously cause problems when I&apos;m looking thru my log files and never see any log messages from SomeOtherFactory. Fortunately it&apos;s easy to check for this using a PatternLayout. Here&apos;s the test method:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void nullInputToGetInstanceShouldReturnNullAndLogADebugAndErrorMessage() {
+    // given
+    Logger rootLogger = Logger.getRootLogger();
+    if (rootLogger.getAllAppenders().hasMoreElements()) {
+        fail(&quot;Root logger already has appenders!&quot;);
+    }
+   
+    // setup the OutputStream to be written to by the logger
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+   
+    // this pattern will output the last element in the dot-delimited
+    //  fully-qualified class name
+    PatternLayout patternLayout = new PatternLayout(&quot;%C{1}&quot;);
+    
+    rootLogger.addAppender(new WriterAppender(patternLayout,
+            outputStream));
+    rootLogger.setLevel(Level.DEBUG);
+   
+    // when
+    // assuming this execution path actually triggers a logging event
+    SomeOtherFactory.getInstance(null);
+   
+    // then
+   
+    // split the output by newline
+    String[] logStatements = new String(outputStream.toByteArray())
+            .split(lineSeparator);
+   
+    assertThat(logStatements[0], is(&quot;SomeOtherFactory&quot;));
+    
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Of course, this depends on testing an execution path resulting in at least one logging event. Note that the fully-qualified class name could be output using &quot;&lt;code&gt;%C&lt;/code&gt;&quot; instead of of &quot;&lt;code&gt;%C{1}&lt;/code&gt;&quot; but that would lead to high degree of brittleness and make future refactorings very difficult since moving a class among packages would require changing tests.&lt;/p&gt;
+&lt;h3&gt;
+	Summary&lt;/h3&gt;
+&lt;p&gt;It&apos;s a bit too OCD even for me to unit test logj4 debugging statements, mainly because doing so makes your tests very brittle and maintaining those tests would be hell.  Testing INFO and higher statements has a lot of utility since if someone cares enough to trigger a non-DEBUG logging event, it&apos;s worth verifying that what the output of that event was.  The approach taken above of enabling DEBUG-level messages but throwing them out before my assertions satisfies my OCD urges to get my coverage graphs to 100% while at the same time making tests useful enough to not annoy my coworkers with brittle and overly-rigid tests. &lt;/p&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Negative Testing, Notably Injected Streams</title>
+      <link>http://stupidplebs.com/blog/2011/negative-testing.html</link>
+      <pubDate>Fri, 9 Dec 2011 00:00:00 -0500</pubDate>
+      <guid isPermaLink="false">blog/2011/negative-testing.html</guid>
+      <description>
+      
+&lt;p&gt;In this post, I&apos;ll cover negative testing, which is to make sure we know what error conditions can occur and how to make sure our code can handle them appropriately.  Let&apos;s say that I want to track our plebs in a registry as just a list of &lt;code&gt;Plebeian&lt;/code&gt; POJOs consisting of just a first and last name.  I can load my registry from an &lt;code&gt;InputStream&lt;/code&gt; of newline-delimited String objects, each of which is itself a comma-delimited last and first names.  Constructing the registry should throw either an exception if something went wrong or complete and able to return an unmodifiable list of &lt;code&gt;Plebeian&lt;/code&gt; objects. &lt;/p&gt;
+&lt;!--break--&gt;
+&lt;p&gt;But first, I&apos;ll be up front about this:  the &lt;a href=&quot;http://commons.apache.org/&quot; target=&quot;_blank&quot;&gt;Apache Commons&lt;/a&gt; projects are freakin&apos; awesome, especially &lt;a href=&quot;http://commons.apache.org/lang/&quot; target=&quot;_blank&quot;&gt;Commons Lang&lt;/a&gt; and &lt;a href=&quot;http://commons.apache.org/io/&quot; target=&quot;_blank&quot;&gt;Commons IO&lt;/a&gt;.  The reason they&apos;re so freakin&apos; awesome is that they drastically reduce the amount of boilerplate code you need to write and add tons of one-liner convenience methods.  I highly recommend their usage in your code when allowed not only for ease of use but to reduce the amount of code that needs to be tested.  For this post I&apos;ll be using the following pieces of Commons functionality:&lt;/p&gt;
+&lt;ul&gt;
+	&lt;li&gt;
+		&lt;a href=&quot;http://commons.apache.org/lang/api-release/org/apache/commons/lang3/Validate.html#notNull%28T,%20java.lang.String,%20java.lang.Object...%29&quot; target=&quot;_blank&quot;&gt;&lt;code&gt;Validate.notNull&lt;/code&gt;&lt;/a&gt; from Commons Lang for validating method parameters&lt;/li&gt;
+	&lt;li&gt;
+		&lt;a href=&quot;http://commons.apache.org/lang/api-release/org/apache/commons/lang3/StringUtils.html#splitPreserveAllTokens%28java.lang.String,%20java.lang.String,%20int%29&quot; target=&quot;_blank&quot;&gt;&lt;code&gt;StringUtils.splitPreserveAllTokens&lt;/code&gt;&lt;/a&gt; from Commons Lang for splitting a delimited &lt;code&gt;String&lt;/code&gt; without having to worry about Java&apos;s standard &lt;code&gt;String.split&lt;/code&gt; oddities&lt;/li&gt;
+	&lt;li&gt;
+		&lt;a href=&quot;http://commons.apache.org/io/api-release/org/apache/commons/io/IOUtils.html#readLines%28java.io.InputStream%29&quot; target=&quot;_blank&quot;&gt;&lt;code&gt;IOUtils.readLines&lt;/code&gt;&lt;/a&gt; from Commons IO to easily read all lines from an &lt;code&gt;InputStream&lt;/code&gt; to a &lt;code&gt;List&amp;lt;String&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;My &lt;code&gt;Plebeian&lt;/code&gt; object is just a POJO with two fields: &lt;code&gt;lastName&lt;/code&gt; and &lt;code&gt;firstName&lt;/code&gt;.  Here&apos;s my &lt;code&gt;PlebeianRegistry&lt;/code&gt; object:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;public class PlebeianRegistry {
+    private final List&amp;lt;Plebeian&amp;gt; plebeians = new ArrayList&amp;lt;Plebeian&amp;gt;();
+    
+    public PlebeianRegistry(final InputStream inputStream)
+    throws IOException {
+        Validate.notNull(inputStream, &quot;InputStream parameter cannot be null&quot;);
+        final List&amp;lt;String&amp;gt; lines = IOUtils.readLines(inputStream);
+        
+        for (final String line : lines) {
+            // get max of 2 delimited fields
+            final String[] fields = StringUtils.splitPreserveAllTokens(
+                    line, &quot;,&quot;, 2);
+            
+            // only honor entries with two fields
+            if (fields.length == 2) {
+                final String lastName = fields[0];
+                final String firstName = fields[1];
+                
+                plebeians.add(new Plebeian(lastName, firstName));
+            }
+            
+        }
+
+    }
+    public List&amp;lt;Plebeian&amp;gt; getPlebeians() {
+        return Collections.unmodifiableList(plebeians);
+    }
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;There are a number of ways that constructing our registry of plebs could go wrong:&lt;/p&gt;
+&lt;ol&gt;
+	&lt;li&gt;
+		The &lt;code&gt;InputStream&lt;/code&gt; parameter could be null&lt;/li&gt;
+	&lt;li&gt;
+		Reading from the &lt;code&gt;InputStream&lt;/code&gt; could throw an exception&lt;/li&gt;
+	&lt;li&gt;
+		A line of input could have fewer or more than 2 fields&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;All of these behaviors signal errors that could occur when constructing the registry and because I want to know how I&apos;m handling error conditions, I write negative tests that simulate cases where things do go wrong. &lt;/p&gt;
+&lt;p&gt;First, what happens when the caller passes &lt;code&gt;null&lt;/code&gt; to the &lt;code&gt;PlebeianRegistry&lt;/code&gt; constructor?  I could just wait til the constructor tries to read from the &lt;code&gt;InputStream&lt;/code&gt; and then track down the line of code but if the reading is part of a big ol&apos; line of complex code, it can be tricky to track down exactly what threw the &lt;code&gt;NullPointerException&lt;/code&gt;.  And what if a bunch of other things happened before the read (such as opening, writing to, and closing a file) that can&apos;t easily be rolled back?  It&apos;s usually best to exit as soon as we know something&apos;s wrong.  To achieve this, the first thing the constructor does is verify that the &lt;code&gt;InputStream&lt;/code&gt; parameter is not null:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;Validate.notNull(inputStream, &quot;InputStream parameter cannot be null&quot;);&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I get a helpful error message stating that the supplied parameter can&apos;t be null.  This behavior is easily verified with the following test:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test(expected=NullPointerException.class)
+public void nullInputStreamParameterShouldThrowException()
+throws IOException {
+    InputStream inputStream = null;
+    new PlebeianRegistry(inputStream);   
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;@Test&lt;/code&gt; annotation takes an optional parameter named &lt;code&gt;expected&lt;/code&gt; that tells jUnit that I expect a &lt;code&gt;NullPointerException&lt;/code&gt; to be thrown when passing a null &lt;code&gt;InputStream&lt;/code&gt; to the &lt;code&gt;PlebeianRegistry&lt;/code&gt; constructor.  Alternatively, if I wanted to check the text of exception message, I could write the test as:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void nullInputStreamParameterShouldThrowExceptionWithExpectedMessage()
+throws IOException {
+    InputStream inputStream = null;
+    
+    try {
+        new PlebeianRegistry(inputStream);
+    }
+    catch (NullPointerException e) {
+        assertThat(e.getMessage(), is(&quot;InputStream parameter cannot be null&quot;));
+    }
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;Second, what happens when reading from the &lt;code&gt;InputStream&lt;/code&gt; throws an &lt;code&gt;IOException&lt;/code&gt;?  This can occur for a variety of reasons, but how I get an &lt;code&gt;InputStream&lt;/code&gt; to throw an &lt;code&gt;Exception&lt;/code&gt;?  By mocking one out via simple extension, of course!  In this test, I give myself a little helper class that extends &lt;code&gt;InputStream&lt;/code&gt; and throws an &lt;code&gt;IOException&lt;/code&gt; whenever the &lt;code&gt;read()&lt;/code&gt; method is called:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;class ExceptionThrowingInputStream extends InputStream {
+    @Override
+    public int read() throws IOException {
+        throw new IOException(&quot;This is a purposeful &quot; +
+                &quot;exception for negative testing&quot;);
+    }
+    
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now I can just pass in an instance of my exception-throwing &lt;code&gt;InputStream&lt;/code&gt; to my &lt;code&gt;PlebeianRegistry&lt;/code&gt; constructor and test away:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test(expected=IOException.class)
+public void badStreamShouldThrowException()
+throws IOException {
+    InputStream inputStream = new ExceptionThrowingInputStream();
+    
+    new PlebeianRegistry(inputStream);
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;All this test says is that when my &lt;code&gt;InputStream&lt;/code&gt; throws an &lt;code&gt;IOException&lt;/code&gt;, I expect to see it bubble up to the caller. &lt;/p&gt;
+&lt;p&gt;Third, what happens when a line from the &lt;code&gt;InputStream&lt;/code&gt; contains fewer or more than two fields?  The data in the input could have been corrupted for some reason so only the last name appears or perhaps the plebs first name (the second field) contains a comma.  To accommodate both conditions, I use the Commons Lang method &lt;code&gt;StringUtils.splitPreserveAllTokens&lt;/code&gt; passing the max number of tokens I want, followed up with a check on how many fields I actually got.  I only want lines of input containing two fields and ignoring input lines containing one field and can do so with this test:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void linesWithLessThan2FieldsShouldBeIgnored()
+throws IOException {
+    String lineSeparator = System.getProperty(&quot;line.separator&quot;);
+    
+    StringBuilder sb = new StringBuilder();
+    sb.append(&quot;plebs last name&quot;).append(lineSeparator);
+    
+    // use IOUtils to convert the string to an InputStream
+    InputStream inputStream = IOUtils.toInputStream(sb.toString());
+    
+    PlebeianRegistry registry = new PlebeianRegistry(inputStream);
+    
+    // the registry should be empty
+    assertThat(registry.getPlebeians().isEmpty(), is(true));
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;The registry was successfully constructed by is empty since the only line of input contained a single field and was ignored.  Conversely, the plebs first name may actually contain a comma that we want to preserve:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void linesWithMoreThan1CommaShouldTreatSecondAsPartOfFieldText()
+throws IOException {
+    String lineSeparator = System.getProperty(&quot;line.separator&quot;);
+    
+    StringBuilder sb = new StringBuilder();
+    sb.append(&quot;harris,bill,schmoe&quot;).append(lineSeparator);
+    
+    // use IOUtils to convert the string to an InputStream
+    InputStream inputStream = IOUtils.toInputStream(sb.toString());
+    
+    PlebeianRegistry registry = new PlebeianRegistry(inputStream);
+    
+    // there should be 1 Plebeian object in the registry
+    assertThat(registry.getPlebeians().size(), is(1));
+    
+    Plebeian plebeian = registry.getPlebeians().get(0);
+    assertThat(plebeian.getLastName(), is(&quot;harris&quot;));
+    assertThat(plebeian.getFirstName(), is(&quot;bill,schmoe&quot;));
+    
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In the last line the test verifies that constructor preserved the second comma as part of the plebs first name.&lt;/p&gt;
+&lt;p&gt;For good measure, I threw in some extra tests that aren&apos;t necessarily negative tests but verify certain behaviors that I haven&apos;t covered in other posts to date:&lt;/p&gt;
+&lt;ul&gt;
+	&lt;li&gt;
+		The &lt;code&gt;InputStream&lt;/code&gt; should be fully read by the constructor&lt;/li&gt;
+	&lt;li&gt;
+		The returned &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;Plebeian&lt;/code&gt; objects should not be modifiable&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Testing the first is simply a matter of noting that in the Java API for &lt;a href=&quot;http://docs.oracle.com/javase/6/docs/api/java/io/InputStream.html#read%28%29&quot; target=&quot;_blank&quot;&gt;&lt;code&gt;read()&lt;/code&gt;&lt;/a&gt;, -1 should be returned when the end of stream is reached:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void linesWith2FieldsShouldBeHonoredAndInputFullyRead()
+throws IOException {
+    String lineSeparator = System.getProperty(&quot;line.separator&quot;);
+    
+    StringBuilder sb = new StringBuilder();
+    sb.append(&quot;plebovitz,joe&quot;).append(lineSeparator);
+    sb.append(&quot;plebington,sam&quot;).append(lineSeparator);
+    
+    // use IOUtils to convert the string to an InputStream
+    InputStream inputStream = IOUtils.toInputStream(sb.toString());
+    
+    PlebeianRegistry registry = new PlebeianRegistry(inputStream);
+    
+    // first assert that the entire stream has been read
+    // -1 is returned if there&apos;s nothing left to read
+    assertThat(inputStream.read(), is(-1));
+    
+    // there should be 2 Plebeian objects in the registry
+    assertThat(registry.getPlebeians().size(), is(2));
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;The second behavior is that I don&apos;t want a caller constructing a &lt;code&gt;PlebeianRegistry&lt;/code&gt; to be able to modify the list, such as adding or removing &lt;code&gt;Plebeian&lt;/code&gt; objects or even clearing the entire list.  To do so, note the getter for the list:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;public List&amp;lt;Plebeian&amp;gt; getPlebeians() {
+    return Collections.unmodifiableList(plebeians);
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;a href=&quot;http://docs.oracle.com/javase/6/docs/api/java/util/Collections.html#unmodifiableList%28java.util.List%29&quot; target=&quot;_blank&quot;&gt;&lt;code&gt;Collections.unmodifiableList&lt;/code&gt;&lt;/a&gt; is a simple wrapped provided by Java itself that throws &lt;code&gt;UnsupportedOperationException&lt;/code&gt;s whenever an attempt is made to modify the list.  Note that it doesn&apos;t stop someone from modifying the objects within the list, only that the list itself cannot be added to or removed from.  Testing that the list returned is not modifiable is easy with this test:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test(expected=UnsupportedOperationException.class)
+public void listOfPlebeiansShouldNotBeModifiable()
+throws IOException {
+    String lineSeparator = System.getProperty(&quot;line.separator&quot;);
+    
+    StringBuilder sb = new StringBuilder();
+    sb.append(&quot;pleb,joe&quot;).append(lineSeparator);
+    
+    // use IOUtils to convert the string to an InputStream
+    InputStream inputStream = IOUtils.toInputStream(sb.toString());
+    
+    PlebeianRegistry registry = new PlebeianRegistry(inputStream);
+    
+    registry.getPlebeians().clear();
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;An effect of the &lt;code&gt;expected&lt;/code&gt; annotation is that the test only says that an &lt;code&gt;UnsupportedOperationException&lt;/code&gt; is thrown &lt;em&gt;somewhere&lt;/em&gt; in the code, not exactly which line threw it.  If I wanted to be absolutely certain of the line that the &lt;code&gt;UnsupportedOperationException&lt;/code&gt; was thrown, I&apos;d have to write the test using &lt;code&gt;fail()&lt;/code&gt;:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void listOfPlebeiansShouldNotBeModifiable2()
+throws IOException {
+    String lineSeparator = System.getProperty(&quot;line.separator&quot;);
+    
+    StringBuilder sb = new StringBuilder();
+    sb.append(&quot;pleb,joe&quot;).append(lineSeparator);
+    
+    // use IOUtils to convert the string to an InputStream
+    InputStream inputStream = IOUtils.toInputStream(sb.toString());
+    
+    PlebeianRegistry registry = new PlebeianRegistry(inputStream);
+    
+    try {
+        registry.getPlebeians().clear();
+        fail(&quot;An UnsupportedOperationException should&apos;ve been thrown&quot;);
+    }
+    catch (UnsupportedOperationException e) {}
+    
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;br /&gt;
+	Surrounding the call to &lt;code&gt;clear()&lt;/code&gt; in a try-catch block allows the &lt;code&gt;UnsupportedOperationException&lt;/code&gt; to be caught and handled before the &lt;code&gt;fail()&lt;/code&gt; has a chance to fail the test. &lt;/p&gt;
+&lt;p&gt;Negative testing is a very aspect part of test-driven development and can get dramatically more involved than these simple examples but doing so can get you closer to 100% coverage and very important to verifying business requirements. &lt;/p&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Unit testing private constructors</title>
+      <link>http://stupidplebs.com/blog/2011/testing-private-constructors.html</link>
+      <pubDate>Fri, 9 Dec 2011 00:00:00 -0500</pubDate>
+      <guid isPermaLink="false">blog/2011/testing-private-constructors.html</guid>
+      <description>
+      
+&lt;p&gt;Private constructors in your factories messing up your coverage graphs?  I&apos;m a bit OCD about my unit testing and like to get all my cobertura graphs to 100% but the problem is I sometimes have classes or factories that contain only statics and the default empty private constructor.  Sure I could declare my default empty constructor public, but I&apos;m also a bit adamant that if my code does something, it had better have a purpose and if I&apos;m willing to just have public constructors when there&apos;s no reason for it, well then society may just as well be on the cusp of anarchy.  I digress.  My statics are well-tested, but cobertura complains that the private constructor that doesn&apos;t actually do anything is untested code. &lt;/p&gt;
+&lt;!--break--&gt;
+&lt;p&gt;First of all, I&apos;m going to establish a standard set of objects that I&apos;ll continue to revisit for my examples.  Starting simple, I have my &lt;code&gt;Plebeian&lt;/code&gt; class that just takes a first and last name &lt;code&gt;String&lt;/code&gt; parameters.  Being that plebeians are, well, just plebeians, do they really need anything more than that?  Here&apos;s my class:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;public class Plebeian {
+    private final String firstName;
+    private final String lastName;
+    
+    public Plebeian(final String firstName, final String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        
+    }
+    
+    public String getFirstName() {
+        return firstName;
+    }
+    
+    public String getLastName() {
+        return lastName;
+    }
+    
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;They&apos;re assigned a first and last name when constructed which they can be asked for but can&apos;t be changed, and that&apos;s pretty much all the excitement they&apos;ll ever have in their miserable little lives. &lt;/p&gt;
+&lt;p&gt;Here&apos;s my factory that creates &lt;code&gt;Plebeian&lt;/code&gt; objects:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;public class PlebeianFactory {
+    private PlebeianFactory() {
+    }
+    
+    public static Plebeian getInstance(final String firstName, final String lastName) {
+        return new Plebeian(firstName, lastName);
+    }
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;It just exposes an static &lt;code&gt;getInstance&lt;/code&gt; method for creating &lt;code&gt;Plebeian&lt;/code&gt; objects and the constructor is private since there&apos;s no purpose in creating an instance of the factory.  Testing that the &lt;code&gt;getInstance&lt;/code&gt; method returns me a &lt;code&gt;Plebeian&lt;/code&gt; object with the first and last names I supplied is pretty easy:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void plebeianShouldBeCreatedWithFirstAndLastNamesSupplied() {
+    Plebeian plebeian = PlebeianFactory.getInstance(&quot;Joe&quot;, &quot;Pleb&quot;);
+    
+    assertThat(plebeian.getFirstName(), is(&quot;Joe&quot;));
+    assertThat(plebeian.getLastName(), is(&quot;Pleb&quot;));
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;You&apos;re now confident that you&apos;ve fully tested your factory and are anxiously awaiting acknowledgement from cobertura that you&apos;re a valuable human being contributing to the planet.  Unfortunately, while your coworkers were basking in your glow of how cool you are because you practice good TDD, cobertura was busy letting you know that your private constructor isn&apos;t tested.  Dumb, right?  Yeah, I know, and most people would let this slide, but you&apos;re not most people.  You&apos;re obsessive compulsive like me and are lookin&apos; to lie to your bean-counting project manager and eschew dedicating time to more important tasks to instead get 100% coverage on this bad boy.  After all, someone could call this constructor using reflection and what if it bombs?  That&apos;s my justification, at least.  Fortunately, you can use reflection for testing, too.  Reflection in Java lets you find out all sorts of interesting information about classes, methods, annotations, et cetera, including finding private constructors and calling them on the sly. &lt;/p&gt;
+&lt;p&gt;For the purpose of this example, we&apos;re going to assert some things about our private constructor, then call the constructor:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void plebeianFactoryPrivateConstructorShouldNotThrowException()
+throws Throwable {
+    // get the constructor that takes no parameters
+    Constructor&amp;lt;?&amp;gt; constructor = PlebeianFactory.class.getDeclaredConstructor((Class&amp;lt;?&amp;gt;[]) null);
+    
+    // the modifiers int can tell us metadata about the constructor
+    int constructorModifiers = constructor.getModifiers();
+    
+    // but we&apos;re only interested in knowing that it&apos;s private
+    assertThat(Modifier.isPrivate(constructorModifiers), is(true));
+    
+    // constructor is private so we first have to make it accessible
+    constructor.setAccessible(true);
+    
+    // now construct an instance
+    constructor.newInstance((Object[]) null);
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;Using reflection modifiers metadata, we first assert that the default constructor is private.  Last, we use the constructor to instantiate the object with &lt;code&gt;newInstance&lt;/code&gt; noting that if the constructor were for some reason to throw an exception, the test would fail.  Just looking at it we all know that the constructor doesn&apos;t actually do anything, but this is enough to appease the cobertura gods that you&apos;ve tested it. &lt;/p&gt;
+&lt;p&gt;I&apos;d like to point out that this is an academic exercise and complete overkill.  Most people don&apos;t waste their time testing empty private constructors and it may anger your boss if he or she finds out you&apos;re writing these sorts of tests, but if you&apos;re bored on a Saturday and want to get closer to that coveted 100% coverage graph to tack to your cubicle wall, this is how you can go about doing so. &lt;/p&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>Testing output to stdout and stderr</title>
+      <link>http://stupidplebs.com/blog/2011/testing-system.out-and-system.err.html</link>
+      <pubDate>Wed, 7 Dec 2011 00:00:00 -0500</pubDate>
+      <guid isPermaLink="false">blog/2011/testing-system.out-and-system.err.html</guid>
+      <description>
+      
+&lt;p&gt;Lots of classes and applications I&apos;ve written at some point output information to &lt;code&gt;System.out&lt;/code&gt; and &lt;code&gt;System.err&lt;/code&gt;.  Sometimes it&apos;s quick-and-dirty debugging but if the output is meaningful, testing what&apos;s written to either is a pretty simple thing to do. &lt;/p&gt;
+&lt;p&gt;For this post, I&apos;ve created a helper class with two static methods that write to &lt;code&gt;System.out&lt;/code&gt; and &lt;code&gt;System.err&lt;/code&gt;:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;class SystemOutAndSystemErrHelper {
+    public static void writeToSystemOut(String text) {
+        System.out.println(&quot;writing &apos;&quot; + text + &quot;&apos; to stdout&quot;);
+    }
+    
+    public static void writeToSystemErr(String text) {
+        System.err.println(&quot;writing &apos;&quot; + text + &quot;&apos; to stderr&quot;);
+    }
+    
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;!--break--&gt;
+&lt;p&gt;Where &lt;code&gt;System.out&lt;/code&gt; and &lt;code&gt;System.err&lt;/code&gt; write output to can be overridden by calling &lt;code&gt;System.setOut&lt;/code&gt; and &lt;code&gt;System.setErr&lt;/code&gt;, supplying &lt;code&gt;PrintStream&lt;/code&gt; instances.  The &lt;code&gt;PrintStream&lt;/code&gt; objects themselves are instantiated with an &lt;code&gt;OutputStream&lt;/code&gt; instance that I can easily interrogate later. &lt;/p&gt;
+&lt;p&gt;In this first test, I instantiate a &lt;code&gt;PrintStream&lt;/code&gt; with a &lt;code&gt;ByteArrayOutputStream&lt;/code&gt;:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void dataShouldBeWrittenToSystemOut() {
+    String newline = System.getProperty(&quot;line.separator&quot;);
+    
+    // the PrintStream will be instantiated with a ByteArrayOutputStream
+    //  that we&apos;ll read from later
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    
+    System.setOut(ps);
+    
+    SystemOutAndSystemErrHelper.writeToSystemOut(&quot;some output text&quot;);
+    
+    String actual = new String(baos.toByteArray());
+    String expected = &quot;writing &apos;some output text&apos; to stdout&quot; + newline;
+    
+    assertThat(actual, is(expected));
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;After calling &lt;code&gt;System.setOut&lt;/code&gt; with the constructed &lt;code&gt;PrintStream&lt;/code&gt;, the helper object writes some text to &lt;code&gt;System.out&lt;/code&gt;.  Testing is as easy then as constructing a &lt;code&gt;String&lt;/code&gt; with the bytes from the &lt;code&gt;ByteArrayOutputStream&lt;/code&gt; and making an assertion about the contents of the output. &lt;/p&gt;
+&lt;p&gt;Testing the output to &lt;code&gt;System.err&lt;/code&gt; is very similar, the only difference being calling &lt;code&gt;System.setErr&lt;/code&gt; in my test instead:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void dataShouldBeWrittenToSystemErr() {
+    String newline = System.getProperty(&quot;line.separator&quot;);
+    
+    // the PrintStream will be instantiated with a ByteArrayOutputStream
+    //  that we&apos;ll read from later
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    
+    System.setErr(ps);
+    
+    SystemOutAndSystemErrHelper.writeToSystemErr(&quot;some error text&quot;);
+    
+    String actual = new String(baos.toByteArray());
+    String expected = &quot;writing &apos;some error text&apos; to stderr&quot; + newline;
+    
+    assertThat(&lt;/code&gt;&lt;code&gt;actual&lt;/code&gt;&lt;code&gt;, is(expected));
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;If I&apos;m not concerned about which handle the data was written to and only that it got written somewhere, I can pass the same &lt;code&gt;PrintStream&lt;/code&gt; to &lt;code&gt;System.setErr&lt;/code&gt; and &lt;code&gt;System.setOut&lt;/code&gt;:&lt;/p&gt;
+&lt;pre class=&quot;prettyprint&quot;&gt;
+&lt;code&gt;@Test
+public void dataShouldBeWrittenToSystemOutAndSystemErr() {
+    String newline = System.getProperty(&quot;line.separator&quot;);
+    
+    // the PrintStream will be instantiated with a ByteArrayOutputStream
+    //  that we&apos;ll read from later
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos);
+    
+    System.setOut(ps);
+    System.setErr(ps);
+    
+    SystemOutAndSystemErrHelper.writeToSystemOut(&quot;some output text&quot;);
+    SystemOutAndSystemErrHelper.writeToSystemErr(&quot;some error text&quot;);
+    
+    String actual = new String(baos.toByteArray());
+    String expected = &quot;writing &apos;some output text&apos; to stdout&quot; + newline +
+                    &quot;writing &apos;some error text&apos; to stderr&quot; + newline;
+    
+    assertThat(&lt;/code&gt;&lt;code&gt;actual&lt;/code&gt;&lt;code&gt;, is(expected));
+    
+}&lt;/code&gt;
+&lt;/pre&gt;
+&lt;p&gt;In my examples I used a &lt;code&gt;ByteArrayOutputStream&lt;/code&gt; for simple conversion to a &lt;code&gt;String&lt;/code&gt;, but I could&apos;ve just as easily used a &lt;code&gt;FileOutputStream&lt;/code&gt;, &lt;code&gt;ObjectOutputStream&lt;/code&gt;, or any other &lt;code&gt;OutputStream&lt;/code&gt; subclass. &lt;/p&gt;
+
+	  </description>
+    </item>
+    
+    <item>
+      <title>assertThat versus assertEquals</title>
+      <link>http://stupidplebs.com/blog/2011/assertThat-versus-assertEquals.html</link>
+      <pubDate>Sat, 3 Dec 2011 00:00:00 -0500</pubDate>
+      <guid isPermaLink="false">blog/2011/assertThat-versus-assertEquals.html</guid>
+      <description>
+      
+&lt;p&gt;Some time ago, JUnit added &lt;code&gt;assertThat&lt;/code&gt; as a replacement to &lt;code&gt;assertEquals&lt;/code&gt;, &lt;code&gt;assertTrue&lt;/code&gt;, &lt;code&gt;assertNull&lt;/code&gt;, etc. Originally, assertions were written as&lt;/p&gt;
+&lt;ul&gt;
+	&lt;li&gt;
+		&lt;code&gt;assertEquals(&quot;stupidplebs.com&quot;, site.getMostAwesome());&lt;/code&gt;&lt;/li&gt;
+	&lt;li&gt;
+		&lt;code&gt;assertTrue(site.isMostAwesomeSite(&quot;stupidplebs.com&quot;));&lt;/code&gt;&lt;/li&gt;
+	&lt;li&gt;
+		&lt;code&gt;assertNulhl(site.getAwesomerSiteThanStupidPlebs());&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This always struck me as a little odd because, especially true for &lt;code&gt;assertEquals&lt;/code&gt;, the order actual and expected parameters order didn&apos;t matter which made reading the purpose of the test a little hard to read. That is,&lt;/p&gt;
+&lt;code&gt;assertEquals(&quot;stupidplebs.com&quot;, site.getMostAwesome());&lt;/code&gt;
+&lt;p&gt;is the equivalent to&lt;/p&gt;
+&lt;code&gt;assertEquals(site.getMostAwesome(), &quot;stupidplebs.com&quot;);&lt;/code&gt;
+&lt;!--break--&gt;
+&lt;p&gt;Sure, content assist in your IDE and JUnit API orders them as &quot;actual first, expected second&quot; but developers are creatures of habit and can&apos;t be trusted to actually put the parameters in that order. Also, and probably more to the point, the test is awkward to read from a grammatical perspective. Read left to right (like English), it&apos;s &quot;I&apos;m asserting the equality of &apos;stupidplebs.com&apos; to the return value of the site objects&apos; &lt;code&gt;getMostAwesome()&lt;/code&gt;method&quot;. For &lt;code&gt;assertTrue&lt;/code&gt; it reads as &quot;I&apos;m asserting the truthfulness of the site objects&apos; &lt;code&gt;isMostAwesomeSite()&lt;/code&gt;method&quot;. Hard to read, no? Well, at least to me it is, YMMV. To read like an English sentence, your eyes have to jump back and forth between the parts of the assertion.&lt;/p&gt;
+&lt;p&gt;Then I found out about &lt;code&gt;assertThat&lt;/code&gt; which, at first, seemed too touchy-feely for my liking. After all, tests are blunt and, besides, I&apos;ve already written a few thousand assertions that I&apos;d have to fix and &lt;code&gt;assertEquals&lt;/code&gt;/&lt;code&gt;True&lt;/code&gt;/&lt;code&gt;Null&lt;/code&gt;/&lt;code&gt;False&lt;/code&gt;/&lt;code&gt;NotNull&lt;/code&gt;/&lt;code&gt;Same&lt;/code&gt;/&lt;code&gt;NotSame&lt;/code&gt;have worked fine so far, so why change now? I decided to give it a go and after some fighting with Eclipse content assist, I was pleased with what I found.&lt;/p&gt;
+&lt;p&gt;Much to my delight, with &lt;code&gt;assertThat&lt;/code&gt;, the assertion reads more like an English sentence, speeding up comprehension of tests written by other developers and when revisiting tests I haven&apos;t seen in a while. For example, the above three tests can be written as:&lt;/p&gt;
+&lt;ul&gt;
+	&lt;li&gt;
+		&lt;code&gt;assertThat(site.getMostAwesome(), is(&quot;stupidplebs.com&quot;));&lt;/code&gt;&lt;/li&gt;
+	&lt;li&gt;
+		&lt;code&gt;assertThat(site.isMostAwesomeSite(&quot;stupidplebs.com&quot;), is(true));&lt;/code&gt;&lt;/li&gt;
+	&lt;li&gt;
+		&lt;code&gt;assertThat(site.getAwesomerSiteThanStupidPlebs(), is(nullValue()));&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Now the first test reads as:&lt;/p&gt;
+&lt;p&gt;&quot;I&apos;m asserting that the return value of the site objects&apos; &lt;code&gt;getMostAwesome()&lt;/code&gt; method is &apos;stupidplebs.com&apos;&quot;&lt;/p&gt;
+&lt;p&gt;The second reads as &quot;I&apos;m asserting that the return value of site objects&apos; &lt;code&gt;isMostAwesomeSite()&lt;/code&gt; method is true&quot;&lt;/p&gt;
+&lt;p&gt;Reads more easily, no? Not only that, by standardizing on a single assert method, after a few times reading tests your eyes can skip over the &lt;code&gt;assertThat&lt;/code&gt; part, resulting in:&lt;/p&gt;
+&lt;p&gt;&quot;the return value of the site objects&apos; &lt;code&gt;getMostAwesome()&lt;/code&gt; method is &apos;stupidplebs.com&apos;&quot;&lt;/p&gt;
+&lt;p&gt;With &lt;code&gt;assertThat&lt;/code&gt;, the &lt;code&gt;is() &lt;/code&gt;method you see is called a matcher. There are a number of matchers available and can be chained together, as in:&lt;/p&gt;
+&lt;code&gt;assertThat(site.isMostAwesomeSite(&quot;stupidplebs.com&quot;), is(not(false))));&lt;/code&gt;
+&lt;p&gt;and&lt;/p&gt;
+&lt;code&gt;assertThat(site, is(not(nullValue()));&lt;/code&gt;
+&lt;p&gt;The last example was done to show an example of chaining, it could also be written as:&lt;/p&gt;
+&lt;code&gt;assertThat(site, is(notNullValue()));&lt;/code&gt;
+&lt;p&gt;Where there were only so many assert methods available in previous versions of JUnit before having to write your own and dealing with your IDEs fussiness of custom assert methods, with &lt;code&gt;assertThat&lt;/code&gt;, if a combination of matchers doesn&apos;t solve your problem, you can write your own matchers by extending org.hamcrest.BaseMatcher. I&apos;ll make a mental note to create some custom matchers and post an article about them.&lt;/p&gt;
+
+	  </description>
+    </item>
+    
+
+  </channel> 
+</rss>

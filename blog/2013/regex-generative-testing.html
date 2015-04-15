@@ -1,10 +1,65 @@
-title=Generative Testing is Even Awesomer for Testing Regular Expressions
-date=2013-08-27
-type=post
-tags=parameterized, unit test, regex, regular expressions, groovy, generative testing
-status=published
-~~~~~~
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Stupid Plebs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
 
+    <!-- Le styles -->
+    <link href="../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/asciidoctor.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../../favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+   
+	
+		<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">StupidPlebs</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../../about.html">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	
+	<div class="page-header">
+		<h1>Generative Testing is Even Awesomer for Testing Regular Expressions</h1>
+	</div>
+
+	<p><em>27 August 2013</em></p>
+
+	<p>
 <p>I attended a presentation by Stu Halloway on generative testing in Clojure at Uberconf 2013 in Denver a few weeks ago and it piqued my interest.  Now I may be completely off on this (hell, I thought my coworker Sanjay stole the Lindbergh baby) but generative testing is for auto-generating tons of tests where the unit of code under test has a combinatorically prohibitive input space.  Stu gave the example of a game that tests for colored pegs in a correctly ordered sequence.  While revisiting some functionality recently that formats a string to Canadian postal code format if it matches a regular expression that allows for case-insensitivity and an optional space or hyphen delimiter, I realized that generative testing is a great technique for this functionality.</p>
 <!--break-->
 
@@ -132,3 +187,26 @@ R8l
 y7J 7F5</code></pre>
 
 <p>The value of the tuning parameter depends on the situation; enough tests to be reasonably thorough but not too many to be burdensome time-wise should be considered.  I set this value to 10,000 since the input space has pretty good coverage and isn't so long that it's noticeable.  Now if some Hogan comes along and changes the internal regex, there's a pretty good chance that one run of the tests (locally, in a CI environment, or by another developer), will catch the error as the test inputs are random (for all intents and purposes).  In fact, I removed 'a' and 'A' for the first character and in 15 attempts I couldn't get all 10,000 tests to pass once.</p>
+</p>
+
+	<hr />
+	
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 <b>Stephen Hess</b>. Powered by <a href="http://jbake.org">JBake v2.3.2</a>.</p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../../js/jquery-1.11.1.min.js"></script>
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/prettify.js"></script>
+    
+  </body>
+</html>

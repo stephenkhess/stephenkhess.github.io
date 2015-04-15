@@ -1,10 +1,65 @@
-title=Unit testing private constructors
-date=2011-12-09
-type=post
-tags=private constructors, tdd, OCD, unit testing
-status=published
-~~~~~~
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Stupid Plebs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
 
+    <!-- Le styles -->
+    <link href="../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/asciidoctor.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../../favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+   
+	
+		<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">StupidPlebs</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../../about.html">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	
+	<div class="page-header">
+		<h1>Unit testing private constructors</h1>
+	</div>
+
+	<p><em>09 December 2011</em></p>
+
+	<p>
 <p>Private constructors in your factories messing up your coverage graphs?  I'm a bit OCD about my unit testing and like to get all my cobertura graphs to 100% but the problem is I sometimes have classes or factories that contain only statics and the default empty private constructor.  Sure I could declare my default empty constructor public, but I'm also a bit adamant that if my code does something, it had better have a purpose and if I'm willing to just have public constructors when there's no reason for it, well then society may just as well be on the cusp of anarchy.  I digress.  My statics are well-tested, but cobertura complains that the private constructor that doesn't actually do anything is untested code. </p>
 <!--break-->
 <p>First of all, I'm going to establish a standard set of objects that I'll continue to revisit for my examples.  Starting simple, I have my <code>Plebeian</code> class that just takes a first and last name <code>String</code> parameters.  Being that plebeians are, well, just plebeians, do they really need anything more than that?  Here's my class:</p>
@@ -77,3 +132,26 @@ throws Throwable {
 </pre>
 <p>Using reflection modifiers metadata, we first assert that the default constructor is private.  Last, we use the constructor to instantiate the object with <code>newInstance</code> noting that if the constructor were for some reason to throw an exception, the test would fail.  Just looking at it we all know that the constructor doesn't actually do anything, but this is enough to appease the cobertura gods that you've tested it. </p>
 <p>I'd like to point out that this is an academic exercise and complete overkill.  Most people don't waste their time testing empty private constructors and it may anger your boss if he or she finds out you're writing these sorts of tests, but if you're bored on a Saturday and want to get closer to that coveted 100% coverage graph to tack to your cubicle wall, this is how you can go about doing so. </p>
+</p>
+
+	<hr />
+	
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 <b>Stephen Hess</b>. Powered by <a href="http://jbake.org">JBake v2.3.2</a>.</p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../../js/jquery-1.11.1.min.js"></script>
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/prettify.js"></script>
+    
+  </body>
+</html>

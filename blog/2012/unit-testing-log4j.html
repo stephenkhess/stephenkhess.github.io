@@ -1,10 +1,65 @@
-title=Unit-testing with Log4j
-date=2012-02-19
-type=post
-tags=tdd, log4j, OCD, unit testing
-status=published
-~~~~~~
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Stupid Plebs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
 
+    <!-- Le styles -->
+    <link href="../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/asciidoctor.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../../favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+   
+	
+		<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">StupidPlebs</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../../about.html">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	
+	<div class="page-header">
+		<h1>Unit-testing with Log4j</h1>
+	</div>
+
+	<p><em>19 February 2012</em></p>
+
+	<p>
 <p><span style="font-size:10px;"><em>(It's been awhile since I've last posted but I agonize over wording so it takes a few hours from start to finish to write these articles)</em></span></p>
 <h3>
 	Testing Log4j Output</h3>
@@ -198,3 +253,26 @@ public void nullInputToGetInstanceShouldReturnNullAndLogADebugAndErrorMessage() 
 <h3>
 	Summary</h3>
 <p>It's a bit too OCD even for me to unit test logj4 debugging statements, mainly because doing so makes your tests very brittle and maintaining those tests would be hell.  Testing INFO and higher statements has a lot of utility since if someone cares enough to trigger a non-DEBUG logging event, it's worth verifying that what the output of that event was.  The approach taken above of enabling DEBUG-level messages but throwing them out before my assertions satisfies my OCD urges to get my coverage graphs to 100% while at the same time making tests useful enough to not annoy my coworkers with brittle and overly-rigid tests. </p>
+</p>
+
+	<hr />
+	
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 <b>Stephen Hess</b>. Powered by <a href="http://jbake.org">JBake v2.3.2</a>.</p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../../js/jquery-1.11.1.min.js"></script>
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/prettify.js"></script>
+    
+  </body>
+</html>

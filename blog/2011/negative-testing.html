@@ -1,10 +1,65 @@
-title=Negative Testing, Notably Injected Streams
-date=2011-12-09
-type=post
-tags=inputstream, tdd, java, negative testing
-status=published
-~~~~~~
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Stupid Plebs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
 
+    <!-- Le styles -->
+    <link href="../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/asciidoctor.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../../favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+   
+	
+		<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">StupidPlebs</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../../about.html">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	
+	<div class="page-header">
+		<h1>Negative Testing, Notably Injected Streams</h1>
+	</div>
+
+	<p><em>09 December 2011</em></p>
+
+	<p>
 <p>In this post, I'll cover negative testing, which is to make sure we know what error conditions can occur and how to make sure our code can handle them appropriately.  Let's say that I want to track our plebs in a registry as just a list of <code>Plebeian</code> POJOs consisting of just a first and last name.  I can load my registry from an <code>InputStream</code> of newline-delimited String objects, each of which is itself a comma-delimited last and first names.  Constructing the registry should throw either an exception if something went wrong or complete and able to return an unmodifiable list of <code>Plebeian</code> objects. </p>
 <!--break-->
 <p>But first, I'll be up front about this:  the <a href="http://commons.apache.org/" target="_blank">Apache Commons</a> projects are freakin' awesome, especially <a href="http://commons.apache.org/lang/" target="_blank">Commons Lang</a> and <a href="http://commons.apache.org/io/" target="_blank">Commons IO</a>.  The reason they're so freakin' awesome is that they drastically reduce the amount of boilerplate code you need to write and add tons of one-liner convenience methods.  I highly recommend their usage in your code when allowed not only for ease of use but to reduce the amount of code that needs to be tested.  For this post I'll be using the following pieces of Commons functionality:</p>
@@ -232,3 +287,26 @@ throws IOException {
 <p><br />
 	Surrounding the call to <code>clear()</code> in a try-catch block allows the <code>UnsupportedOperationException</code> to be caught and handled before the <code>fail()</code> has a chance to fail the test. </p>
 <p>Negative testing is a very aspect part of test-driven development and can get dramatically more involved than these simple examples but doing so can get you closer to 100% coverage and very important to verifying business requirements. </p>
+</p>
+
+	<hr />
+	
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 <b>Stephen Hess</b>. Powered by <a href="http://jbake.org">JBake v2.3.2</a>.</p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../../js/jquery-1.11.1.min.js"></script>
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/prettify.js"></script>
+    
+  </body>
+</html>

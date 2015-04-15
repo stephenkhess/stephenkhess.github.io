@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+    <url>
+    	<loc>http://stupidplebs.comabout.html</loc>
+    	<lastmod>2015-04-14</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2015/negatively-testing-regular-expressions.html</loc>
+    	<lastmod>2015-04-02</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2015/building-random-strings.html</loc>
+    	<lastmod>2015-03-27</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2014/testing-webservlet-annotations.html</loc>
+    	<lastmod>2014-08-15</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2013/regex-generative-testing.html</loc>
+    	<lastmod>2013-08-27</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2013/parameterized-unit-tests.html</loc>
+    	<lastmod>2013-01-27</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2012/unit-testing-log4j.html</loc>
+    	<lastmod>2012-02-19</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2011/negative-testing.html</loc>
+    	<lastmod>2011-12-09</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2011/testing-private-constructors.html</loc>
+    	<lastmod>2011-12-09</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2011/testing-system.out-and-system.err.html</loc>
+    	<lastmod>2011-12-07</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://stupidplebs.comblog/2011/assertThat-versus-assertEquals.html</loc>
+    	<lastmod>2011-12-03</lastmod>
+    </url>
+
+</urlset>

@@ -1,1 +1,213 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Stupid Plebs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/asciidoctor.css" rel="stylesheet">
+    <link href="css/base.css" rel="stylesheet">
+    <link href="css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+   
+
+		<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">StupidPlebs</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="about.html">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+
+	
+		<a href="blog/2015/negatively-testing-regular-expressions.html"><h1>Negative Tests for Regular Expressions</h1></a>
+		<p>02 April 2015</p>
+		<p>
+In the last post I discussed generating structured random inputs using RandomStringBuilder.  This is all well and good for tests that we expect to pass, but what about negatively testing inputs?  That is, testing inputs that should fail.  For sufficiently complex regular expressions, it's quite easy to introduce an unwanted quantifier or pattern.  To revisit the Canadian postal code regular expression from prior posts, it's a subtle mistake to inadvertently change
+
+<pre class="prettyprint"><code>/(?i)^([A-Z][0-9][A-Z])(?:[ -]?([0-9][A-Z][0-9]))?$/</code></pre>
+
+to include the 1-or-more <b>+</b> quantifier:
+
+<pre class="prettyprint"><code>/(?i)^([A-Z]+[0-9][A-Z])(?:[ -]?([0-9][A-Z][0-9]))?$/</code></pre>
+</p>
+		<p><a href="blog/2015/negatively-testing-regular-expressions.html">Read more</a></p>
+  	
+		<a href="blog/2015/building-random-strings.html"><h1>Building Random Strings for Generatively Testing Regular Expressions</h1></a>
+		<p>27 March 2015</p>
+		<p>
+After spending some time working with generating random strings for testing regular expressions, I decided to write a utility to make things easier to read and reduce the amount of code in my tests.  The library is here:
+
+https://github.com/stephenkhess/RandomStringBuilder
+</p>
+		<p><a href="blog/2015/building-random-strings.html">Read more</a></p>
+  	
+		<a href="blog/2014/testing-webservlet-annotations.html"><h1>Taking things too far: Testing @WebServlet annotations</h1></a>
+		<p>15 August 2014</p>
+		<p>
+<p>It's been quite awhile since I last posted but my wife and I had a kid in November and, despite my very vocal protestations, diapers trump TDD.  Today's article is a short one, but I've found it useful ever since switching away from servlet definitions in web.xml to inline @WebServlet annotations.  It's applicable to any type of annotations, I suppose, but for me the @WebServlet annotation comes up quite a bit in my day-to-day development.  </p>
+
+<p>First, here's our servlet class definition:</p>
+
+<pre class="prettyprint">
+<code>@WebServlet(
+    name="Pleb Control", 
+    description="This servlet is for keeping the plebs in check",
+    loadOnStartup=1, 
+    asyncSupported=true,
+    urlPatterns={
+        "/stupidplebs/subjugateBrutually", 
+        "/stupidplebs/governFairly"
+    }, 
+    initParams = {
+        @WebInitParam(name="enforcementMethod1", value="the stink eye"),
+        @WebInitParam(name="enforcementMethod2", value="propaganda")
+    }
+)
+public class StupidPlebServlet extends HttpServlet {
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+        // do some stuff
+    }
+}
+</code>
+</pre>
+</p>
+		<p><a href="blog/2014/testing-webservlet-annotations.html">Read more</a></p>
+  	
+		<a href="blog/2013/regex-generative-testing.html"><h1>Generative Testing is Even Awesomer for Testing Regular Expressions</h1></a>
+		<p>27 August 2013</p>
+		<p>
+<p>I attended a presentation by Stu Halloway on generative testing in Clojure at Uberconf 2013 in Denver a few weeks ago and it piqued my interest.  Now I may be completely off on this (hell, I thought my coworker Sanjay stole the Lindbergh baby) but generative testing is for auto-generating tons of tests where the unit of code under test has a combinatorically prohibitive input space.  Stu gave the example of a game that tests for colored pegs in a correctly ordered sequence.  While revisiting some functionality recently that formats a string to Canadian postal code format if it matches a regular expression that allows for case-insensitivity and an optional space or hyphen delimiter, I realized that generative testing is a great technique for this functionality.</p>
+</p>
+		<p><a href="blog/2013/regex-generative-testing.html">Read more</a></p>
+  	
+		<a href="blog/2013/parameterized-unit-tests.html"><h1>Parameterized Tests are Freakin' Awesome for Unit Testing Regular Expressions</h1></a>
+		<p>27 January 2013</p>
+		<p>
+<p>I've been looking for a good reason to use parameterized tests for awhile now and I finally discovered a great one:  testing regular expressions.  This is especially useful for case-insensitive regexes with lots of OR (|) conditions.  </p>
+</p>
+		<p><a href="blog/2013/parameterized-unit-tests.html">Read more</a></p>
+  	
+		<a href="blog/2012/unit-testing-log4j.html"><h1>Unit-testing with Log4j</h1></a>
+		<p>19 February 2012</p>
+		<p>
+<p><span style="font-size:10px;"><em>(It's been awhile since I've last posted but I agonize over wording so it takes a few hours from start to finish to write these articles)</em></span></p>
+<h3>
+	Testing Log4j Output</h3>
+<p>So you've diligently written some thorough tests but our benevolent lord and savior, <a href="http://cobertura.sourceforge.net/" target="_blank">Cobertura</a>, that wants only good things for us informs you that those pesky conditionally-executed logging statements are uncovered.  Or maybe you just want to verify that your logging statements are being output.  If either of these statements apply to your situation, then this article is for you.  <br />
+	<br />
+	Before I get started, and I cannot stress this enough, <strong>excessive testing of log4j statements (especially DEBUG) will cause your tests to become extremely brittle!</strong>  Your coworkers will become very annoyed with you if the debugging statements they're adding to diagnose a logic problem are causing tests to fail.  I'll address how to get around this later on in the section entitled <a href="#beatings">"How to Avoid Being Beaten to Death"</a>. </p>
+</p>
+		<p><a href="blog/2012/unit-testing-log4j.html">Read more</a></p>
+  	
+		<a href="blog/2011/negative-testing.html"><h1>Negative Testing, Notably Injected Streams</h1></a>
+		<p>09 December 2011</p>
+		<p>
+<p>In this post, I'll cover negative testing, which is to make sure we know what error conditions can occur and how to make sure our code can handle them appropriately.  Let's say that I want to track our plebs in a registry as just a list of <code>Plebeian</code> POJOs consisting of just a first and last name.  I can load my registry from an <code>InputStream</code> of newline-delimited String objects, each of which is itself a comma-delimited last and first names.  Constructing the registry should throw either an exception if something went wrong or complete and able to return an unmodifiable list of <code>Plebeian</code> objects. </p>
+</p>
+		<p><a href="blog/2011/negative-testing.html">Read more</a></p>
+  	
+		<a href="blog/2011/testing-private-constructors.html"><h1>Unit testing private constructors</h1></a>
+		<p>09 December 2011</p>
+		<p>
+<p>Private constructors in your factories messing up your coverage graphs?  I'm a bit OCD about my unit testing and like to get all my cobertura graphs to 100% but the problem is I sometimes have classes or factories that contain only statics and the default empty private constructor.  Sure I could declare my default empty constructor public, but I'm also a bit adamant that if my code does something, it had better have a purpose and if I'm willing to just have public constructors when there's no reason for it, well then society may just as well be on the cusp of anarchy.  I digress.  My statics are well-tested, but cobertura complains that the private constructor that doesn't actually do anything is untested code. </p>
+</p>
+		<p><a href="blog/2011/testing-private-constructors.html">Read more</a></p>
+  	
+		<a href="blog/2011/testing-system.out-and-system.err.html"><h1>Testing output to stdout and stderr</h1></a>
+		<p>07 December 2011</p>
+		<p>
+<p>Lots of classes and applications I've written at some point output information to <code>System.out</code> and <code>System.err</code>.  Sometimes it's quick-and-dirty debugging but if the output is meaningful, testing what's written to either is a pretty simple thing to do. </p>
+<p>For this post, I've created a helper class with two static methods that write to <code>System.out</code> and <code>System.err</code>:</p>
+<pre class="prettyprint">
+<code>class SystemOutAndSystemErrHelper {
+    public static void writeToSystemOut(String text) {
+        System.out.println("writing '" + text + "' to stdout");
+    }
+    
+    public static void writeToSystemErr(String text) {
+        System.err.println("writing '" + text + "' to stderr");
+    }
+    
+}</code></pre>
+</p>
+		<p><a href="blog/2011/testing-system.out-and-system.err.html">Read more</a></p>
+  	
+		<a href="blog/2011/assertThat-versus-assertEquals.html"><h1>assertThat versus assertEquals</h1></a>
+		<p>03 December 2011</p>
+		<p>
+<p>Some time ago, JUnit added <code>assertThat</code> as a replacement to <code>assertEquals</code>, <code>assertTrue</code>, <code>assertNull</code>, etc. Originally, assertions were written as</p>
+<ul>
+	<li>
+		<code>assertEquals("stupidplebs.com", site.getMostAwesome());</code></li>
+	<li>
+		<code>assertTrue(site.isMostAwesomeSite("stupidplebs.com"));</code></li>
+	<li>
+		<code>assertNulhl(site.getAwesomerSiteThanStupidPlebs());</code></li>
+</ul>
+<p>This always struck me as a little odd because, especially true for <code>assertEquals</code>, the order actual and expected parameters order didn't matter which made reading the purpose of the test a little hard to read. That is,</p>
+<code>assertEquals("stupidplebs.com", site.getMostAwesome());</code>
+<p>is the equivalent to</p>
+<code>assertEquals(site.getMostAwesome(), "stupidplebs.com");</code>
+</p>
+		<p><a href="blog/2011/assertThat-versus-assertEquals.html">Read more</a></p>
+  	
+	
+	<hr />
+	
+	<p><a href="/archive.html">Post Archive</a></p>
+
+		</div>
+		<div id="push"></div>
+    </div>
+    
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2015 <b>Stephen Hess</b>. Powered by <a href="http://jbake.org">JBake v2.3.2</a>.</p>
+      </div>
+    </div>
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery-1.11.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/prettify.js"></script>
+    
+  </body>
+</html>
