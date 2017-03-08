@@ -6,15 +6,15 @@
     <atom:link href="https://trescube.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 7 Mar 2017 23:45:26 -0500</pubDate>
-    <lastBuildDate>Tue, 7 Mar 2017 23:45:26 -0500</lastBuildDate>
+    <pubDate>Tue, 7 Mar 2017 23:54:53 -0500</pubDate>
+    <lastBuildDate>Tue, 7 Mar 2017 23:54:53 -0500</lastBuildDate>
 
     
     <item>
       <title>Negative Tests for Regular Expressions</title>
-      <link>https://trescube.github.io/blog/2015/negatively-testing-regular-expressions.html</link>
+      <link>https://trescube.github.io/2015/negatively-testing-regular-expressions.html</link>
       <pubDate>Thu, 2 Apr 2015 00:00:00 -0400</pubDate>
-      <guid isPermaLink="false">blog/2015/negatively-testing-regular-expressions.html</guid>
+      <guid isPermaLink="false">2015/negatively-testing-regular-expressions.html</guid>
       <description>
       
 In the last post I discussed generating structured random inputs using RandomStringBuilder.  This is all well and good for tests that we expect to pass, but what about negatively testing inputs?  That is, testing inputs that should fail.  For sufficiently complex regular expressions, it&apos;s quite easy to introduce an unwanted quantifier or pattern.  To revisit the Canadian postal code regular expression from prior posts, it&apos;s a subtle mistake to inadvertently change
@@ -116,9 +116,9 @@ This will generate the regular expression: &lt;pre&gt;&lt;code&gt;[a-zA-Z]{1,2}[
     
     <item>
       <title>Building Random Strings for Generatively Testing Regular Expressions</title>
-      <link>https://trescube.github.io/blog/2015/building-random-strings.html</link>
+      <link>https://trescube.github.io/2015/building-random-strings.html</link>
       <pubDate>Fri, 27 Mar 2015 00:00:00 -0400</pubDate>
-      <guid isPermaLink="false">blog/2015/building-random-strings.html</guid>
+      <guid isPermaLink="false">2015/building-random-strings.html</guid>
       <description>
       
 After spending some time working with generating random strings for testing regular expressions, I decided to write a utility to make things easier to read and reduce the amount of code in my tests.  The library is here:
@@ -212,9 +212,9 @@ def input = new RandomStringGenerator.Builder().
     
     <item>
       <title>Taking things too far: Testing @WebServlet annotations</title>
-      <link>https://trescube.github.io/blog/2014/testing-webservlet-annotations.html</link>
+      <link>https://trescube.github.io/2014/testing-webservlet-annotations.html</link>
       <pubDate>Fri, 15 Aug 2014 00:00:00 -0400</pubDate>
-      <guid isPermaLink="false">blog/2014/testing-webservlet-annotations.html</guid>
+      <guid isPermaLink="false">2014/testing-webservlet-annotations.html</guid>
       <description>
       
 &lt;p&gt;It&apos;s been quite awhile since I last posted but my wife and I had a kid in November and, despite my very vocal protestations, diapers trump TDD.  Today&apos;s article is a short one, but I&apos;ve found it useful ever since switching away from servlet definitions in web.xml to inline @WebServlet annotations.  It&apos;s applicable to any type of annotations, I suppose, but for me the @WebServlet annotation comes up quite a bit in my day-to-day development.  &lt;/p&gt;
@@ -326,9 +326,9 @@ This makes a very easy and convenient verification that a servlet will be loaded
     
     <item>
       <title>Generative Testing is Even Awesomer for Testing Regular Expressions</title>
-      <link>https://trescube.github.io/blog/2013/regex-generative-testing.html</link>
+      <link>https://trescube.github.io/2013/regex-generative-testing.html</link>
       <pubDate>Tue, 27 Aug 2013 00:00:00 -0400</pubDate>
-      <guid isPermaLink="false">blog/2013/regex-generative-testing.html</guid>
+      <guid isPermaLink="false">2013/regex-generative-testing.html</guid>
       <description>
       
 &lt;p&gt;I attended a presentation by Stu Halloway on generative testing in Clojure at Uberconf 2013 in Denver a few weeks ago and it piqued my interest.  Now I may be completely off on this (hell, I thought my coworker Sanjay stole the Lindbergh baby) but generative testing is for auto-generating tons of tests where the unit of code under test has a combinatorically prohibitive input space.  Stu gave the example of a game that tests for colored pegs in a correctly ordered sequence.  While revisiting some functionality recently that formats a string to Canadian postal code format if it matches a regular expression that allows for case-insensitivity and an optional space or hyphen delimiter, I realized that generative testing is a great technique for this functionality.&lt;/p&gt;
@@ -464,9 +464,9 @@ y7J 7F5&lt;/code&gt;&lt;/pre&gt;
     
     <item>
       <title>Parameterized Tests are Freakin' Awesome for Unit Testing Regular Expressions</title>
-      <link>https://trescube.github.io/blog/2013/parameterized-unit-tests.html</link>
+      <link>https://trescube.github.io/2013/parameterized-unit-tests.html</link>
       <pubDate>Sun, 27 Jan 2013 00:00:00 -0500</pubDate>
-      <guid isPermaLink="false">blog/2013/parameterized-unit-tests.html</guid>
+      <guid isPermaLink="false">2013/parameterized-unit-tests.html</guid>
       <description>
       
 &lt;p&gt;I&apos;ve been looking for a good reason to use parameterized tests for awhile now and I finally discovered a great one:  testing regular expressions.  This is especially useful for case-insensitive regexes with lots of OR (|) conditions.  &lt;/p&gt;
@@ -567,9 +567,9 @@ public class ParameterizedRegexTest {
     
     <item>
       <title>Unit-testing with Log4j</title>
-      <link>https://trescube.github.io/blog/2012/unit-testing-log4j.html</link>
+      <link>https://trescube.github.io/2012/unit-testing-log4j.html</link>
       <pubDate>Sun, 19 Feb 2012 00:00:00 -0500</pubDate>
-      <guid isPermaLink="false">blog/2012/unit-testing-log4j.html</guid>
+      <guid isPermaLink="false">2012/unit-testing-log4j.html</guid>
       <description>
       
 &lt;p&gt;&lt;span style=&quot;font-size:10px;&quot;&gt;&lt;em&gt;(It&apos;s been awhile since I&apos;ve last posted but I agonize over wording so it takes a few hours from start to finish to write these articles)&lt;/em&gt;&lt;/span&gt;&lt;/p&gt;
@@ -771,9 +771,9 @@ public void nullInputToGetInstanceShouldReturnNullAndLogADebugAndErrorMessage() 
     
     <item>
       <title>Negative Testing, Notably Injected Streams</title>
-      <link>https://trescube.github.io/blog/2011/negative-testing.html</link>
+      <link>https://trescube.github.io/2011/negative-testing.html</link>
       <pubDate>Fri, 9 Dec 2011 00:00:00 -0500</pubDate>
-      <guid isPermaLink="false">blog/2011/negative-testing.html</guid>
+      <guid isPermaLink="false">2011/negative-testing.html</guid>
       <description>
       
 &lt;p&gt;In this post, I&apos;ll cover negative testing, which is to make sure we know what error conditions can occur and how to make sure our code can handle them appropriately.  Let&apos;s say that I want to track our plebs in a registry as just a list of &lt;code&gt;Plebeian&lt;/code&gt; POJOs consisting of just a first and last name.  I can load my registry from an &lt;code&gt;InputStream&lt;/code&gt; of newline-delimited String objects, each of which is itself a comma-delimited last and first names.  Constructing the registry should throw either an exception if something went wrong or complete and able to return an unmodifiable list of &lt;code&gt;Plebeian&lt;/code&gt; objects. &lt;/p&gt;
@@ -1009,9 +1009,9 @@ throws IOException {
     
     <item>
       <title>Unit testing private constructors</title>
-      <link>https://trescube.github.io/blog/2011/testing-private-constructors.html</link>
+      <link>https://trescube.github.io/2011/testing-private-constructors.html</link>
       <pubDate>Fri, 9 Dec 2011 00:00:00 -0500</pubDate>
-      <guid isPermaLink="false">blog/2011/testing-private-constructors.html</guid>
+      <guid isPermaLink="false">2011/testing-private-constructors.html</guid>
       <description>
       
 &lt;p&gt;Private constructors in your factories messing up your coverage graphs?  I&apos;m a bit OCD about my unit testing and like to get all my cobertura graphs to 100% but the problem is I sometimes have classes or factories that contain only statics and the default empty private constructor.  Sure I could declare my default empty constructor public, but I&apos;m also a bit adamant that if my code does something, it had better have a purpose and if I&apos;m willing to just have public constructors when there&apos;s no reason for it, well then society may just as well be on the cusp of anarchy.  I digress.  My statics are well-tested, but cobertura complains that the private constructor that doesn&apos;t actually do anything is untested code. &lt;/p&gt;
@@ -1092,9 +1092,9 @@ throws Throwable {
     
     <item>
       <title>Testing output to stdout and stderr</title>
-      <link>https://trescube.github.io/blog/2011/testing-system.out-and-system.err.html</link>
+      <link>https://trescube.github.io/2011/testing-system.out-and-system.err.html</link>
       <pubDate>Wed, 7 Dec 2011 00:00:00 -0500</pubDate>
-      <guid isPermaLink="false">blog/2011/testing-system.out-and-system.err.html</guid>
+      <guid isPermaLink="false">2011/testing-system.out-and-system.err.html</guid>
       <description>
       
 &lt;p&gt;Lots of classes and applications I&apos;ve written at some point output information to &lt;code&gt;System.out&lt;/code&gt; and &lt;code&gt;System.err&lt;/code&gt;.  Sometimes it&apos;s quick-and-dirty debugging but if the output is meaningful, testing what&apos;s written to either is a pretty simple thing to do. &lt;/p&gt;
@@ -1189,9 +1189,9 @@ public void dataShouldBeWrittenToSystemOutAndSystemErr() {
     
     <item>
       <title>assertThat versus assertEquals</title>
-      <link>https://trescube.github.io/blog/2011/assertThat-versus-assertEquals.html</link>
+      <link>https://trescube.github.io/2011/assertThat-versus-assertEquals.html</link>
       <pubDate>Sat, 3 Dec 2011 00:00:00 -0500</pubDate>
-      <guid isPermaLink="false">blog/2011/assertThat-versus-assertEquals.html</guid>
+      <guid isPermaLink="false">2011/assertThat-versus-assertEquals.html</guid>
       <description>
       
 &lt;p&gt;Some time ago, JUnit added &lt;code&gt;assertThat&lt;/code&gt; as a replacement to &lt;code&gt;assertEquals&lt;/code&gt;, &lt;code&gt;assertTrue&lt;/code&gt;, &lt;code&gt;assertNull&lt;/code&gt;, etc. Originally, assertions were written as&lt;/p&gt;
