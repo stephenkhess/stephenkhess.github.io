@@ -67,7 +67,7 @@
 <p>In my environment, the method under test is named <code>isAllUniqueChars</code> and the tests utilize a library I wrote called <a href="https://github.com/trescube/RandomStringBuilder">RandomStringBuilder</a> to generate random strings but any function that generates random strings will do. </p>
 <p>I fully admit that this is overkill for what is a relatively simple problem. These tests are mainly for practice and illustration purposes. </p>
 <h4>Tests for <code>true</code></h4>
-<p>This test generates inputs that are known to contain all unique characters, an assertion we can make because of the usage of the [<code>unique</code>](<a href="http://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Collection.html#unique()">http://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Collection.html#unique()</a>) collections method in groovy (if <code>unique</code> is broken then we have bigger things to worry about.) We have to use <code>unique</code> because RandomStringBuilder is generating random strings and could very well contain duplicates.</p>
+<p>This test generates inputs that are known to contain all unique characters, an assertion we can make because of the usage of the <a href="http://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Collection.html#unique%28%29"><code>unique</code></a> collections method in groovy (if <code>unique</code> is broken then we have bigger things to worry about.) We have to use <code>unique</code> because RandomStringBuilder is generating random strings and could very well contain duplicates.</p>
 <pre><code class="groovy">def &quot;strings with all unique characters should return true&quot;() {
     given:
     def randomStringBuilder = new RandomStringBuilder()
