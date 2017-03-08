@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>JBake</title>
-    <link>http://stupidplebs.com</link>
-    <atom:link href="http://stupidplebs.com/feed.xml" rel="self" type="application/rss+xml" />
+    <link>https://trescube.github.io</link>
+    <atom:link href="https://trescube.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 7 Mar 2017 23:37:20 -0500</pubDate>
-    <lastBuildDate>Tue, 7 Mar 2017 23:37:20 -0500</lastBuildDate>
+    <pubDate>Tue, 7 Mar 2017 23:45:26 -0500</pubDate>
+    <lastBuildDate>Tue, 7 Mar 2017 23:45:26 -0500</lastBuildDate>
 
     
     <item>
       <title>Negative Tests for Regular Expressions</title>
-      <link>http://stupidplebs.com/blog/2015/negatively-testing-regular-expressions.html</link>
+      <link>https://trescube.github.io/blog/2015/negatively-testing-regular-expressions.html</link>
       <pubDate>Thu, 2 Apr 2015 00:00:00 -0400</pubDate>
       <guid isPermaLink="false">blog/2015/negatively-testing-regular-expressions.html</guid>
       <description>
@@ -116,7 +116,7 @@ This will generate the regular expression: &lt;pre&gt;&lt;code&gt;[a-zA-Z]{1,2}[
     
     <item>
       <title>Building Random Strings for Generatively Testing Regular Expressions</title>
-      <link>http://stupidplebs.com/blog/2015/building-random-strings.html</link>
+      <link>https://trescube.github.io/blog/2015/building-random-strings.html</link>
       <pubDate>Fri, 27 Mar 2015 00:00:00 -0400</pubDate>
       <guid isPermaLink="false">blog/2015/building-random-strings.html</guid>
       <description>
@@ -212,7 +212,7 @@ def input = new RandomStringGenerator.Builder().
     
     <item>
       <title>Taking things too far: Testing @WebServlet annotations</title>
-      <link>http://stupidplebs.com/blog/2014/testing-webservlet-annotations.html</link>
+      <link>https://trescube.github.io/blog/2014/testing-webservlet-annotations.html</link>
       <pubDate>Fri, 15 Aug 2014 00:00:00 -0400</pubDate>
       <guid isPermaLink="false">blog/2014/testing-webservlet-annotations.html</guid>
       <description>
@@ -326,7 +326,7 @@ This makes a very easy and convenient verification that a servlet will be loaded
     
     <item>
       <title>Generative Testing is Even Awesomer for Testing Regular Expressions</title>
-      <link>http://stupidplebs.com/blog/2013/regex-generative-testing.html</link>
+      <link>https://trescube.github.io/blog/2013/regex-generative-testing.html</link>
       <pubDate>Tue, 27 Aug 2013 00:00:00 -0400</pubDate>
       <guid isPermaLink="false">blog/2013/regex-generative-testing.html</guid>
       <description>
@@ -464,7 +464,7 @@ y7J 7F5&lt;/code&gt;&lt;/pre&gt;
     
     <item>
       <title>Parameterized Tests are Freakin' Awesome for Unit Testing Regular Expressions</title>
-      <link>http://stupidplebs.com/blog/2013/parameterized-unit-tests.html</link>
+      <link>https://trescube.github.io/blog/2013/parameterized-unit-tests.html</link>
       <pubDate>Sun, 27 Jan 2013 00:00:00 -0500</pubDate>
       <guid isPermaLink="false">blog/2013/parameterized-unit-tests.html</guid>
       <description>
@@ -567,7 +567,7 @@ public class ParameterizedRegexTest {
     
     <item>
       <title>Unit-testing with Log4j</title>
-      <link>http://stupidplebs.com/blog/2012/unit-testing-log4j.html</link>
+      <link>https://trescube.github.io/blog/2012/unit-testing-log4j.html</link>
       <pubDate>Sun, 19 Feb 2012 00:00:00 -0500</pubDate>
       <guid isPermaLink="false">blog/2012/unit-testing-log4j.html</guid>
       <description>
@@ -771,7 +771,7 @@ public void nullInputToGetInstanceShouldReturnNullAndLogADebugAndErrorMessage() 
     
     <item>
       <title>Negative Testing, Notably Injected Streams</title>
-      <link>http://stupidplebs.com/blog/2011/negative-testing.html</link>
+      <link>https://trescube.github.io/blog/2011/negative-testing.html</link>
       <pubDate>Fri, 9 Dec 2011 00:00:00 -0500</pubDate>
       <guid isPermaLink="false">blog/2011/negative-testing.html</guid>
       <description>
@@ -1009,7 +1009,7 @@ throws IOException {
     
     <item>
       <title>Unit testing private constructors</title>
-      <link>http://stupidplebs.com/blog/2011/testing-private-constructors.html</link>
+      <link>https://trescube.github.io/blog/2011/testing-private-constructors.html</link>
       <pubDate>Fri, 9 Dec 2011 00:00:00 -0500</pubDate>
       <guid isPermaLink="false">blog/2011/testing-private-constructors.html</guid>
       <description>
@@ -1092,7 +1092,7 @@ throws Throwable {
     
     <item>
       <title>Testing output to stdout and stderr</title>
-      <link>http://stupidplebs.com/blog/2011/testing-system.out-and-system.err.html</link>
+      <link>https://trescube.github.io/blog/2011/testing-system.out-and-system.err.html</link>
       <pubDate>Wed, 7 Dec 2011 00:00:00 -0500</pubDate>
       <guid isPermaLink="false">blog/2011/testing-system.out-and-system.err.html</guid>
       <description>
@@ -1189,7 +1189,7 @@ public void dataShouldBeWrittenToSystemOutAndSystemErr() {
     
     <item>
       <title>assertThat versus assertEquals</title>
-      <link>http://stupidplebs.com/blog/2011/assertThat-versus-assertEquals.html</link>
+      <link>https://trescube.github.io/blog/2011/assertThat-versus-assertEquals.html</link>
       <pubDate>Sat, 3 Dec 2011 00:00:00 -0500</pubDate>
       <guid isPermaLink="false">blog/2011/assertThat-versus-assertEquals.html</guid>
       <description>
