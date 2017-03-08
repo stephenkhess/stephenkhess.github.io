@@ -2,12 +2,12 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>JBake</title>
-    <link>https://trescube.github.io</link>
+    <link>https://trescube.github.io/</link>
     <atom:link href="https://trescube.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Tue, 7 Mar 2017 23:54:53 -0500</pubDate>
-    <lastBuildDate>Tue, 7 Mar 2017 23:54:53 -0500</lastBuildDate>
+    <pubDate>Wed, 8 Mar 2017 00:05:56 -0500</pubDate>
+    <lastBuildDate>Wed, 8 Mar 2017 00:05:56 -0500</lastBuildDate>
 
     
     <item>
@@ -1236,5 +1236,5 @@ public void dataShouldBeWrittenToSystemOutAndSystemErr() {
     </item>
     
 
-  </channel> 
+  </channel>
 </rss>
