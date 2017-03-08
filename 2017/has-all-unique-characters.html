@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Stupid Plebs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="keywords" content="">
+    <meta name="generator" content="JBake">
+
+    <!-- Le styles -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/asciidoctor.css" rel="stylesheet">
+    <link href="../css/base.css" rel="stylesheet">
+    <link href="../css/prettify.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <!--<link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">-->
+    <link rel="shortcut icon" href="../favicon.ico">
+  </head>
+  <body onload="prettyPrint()">
+    <div id="wrap">
+   
+	
+		<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">StupidPlebs</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="../about.html">About</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+	
+	<div class="page-header">
+		<h1>Generatively Testing for All Unique Characters</h1>
+	</div>
+
+	<p><em>08 March 2017</em></p>
+
+	<p><p>Lately I've been going through <a href="https://www.amazon.com/Cracking-Coding-Interview-Programming-Questions/dp/0984782850/ref=sr_1_1?ie=UTF8&qid=1488990244&sr=8-1&keywords=cracking+the+coding+interview">Cracking the Coding Interview</a> and practicing generative testing approaches to some of the problems. This will hopefully be the first in a number of posts about the problems found in that book. I won't be posting solutions to the actual problems, but these posts will provide code and strategies for testing solutions that readers come up with. </p>
+<h3>The Problem</h3>
+<p>The problem in the book states: Implement an algorithm to determine if a string has all unique characters. Presumably this algorithm returns <code>true</code> if the string has all unique characters and <code>false</code> otherwise. For example, strings like 'abc' would return <code>true</code> and <code>aba</code> would return <code>false</code>. </p>
+<!--break-->
+<h3>Generative Tests</h3>
+<p>In my environment, the method under test is named <code>isAllUniqueChars</code> and the tests utilize a library I wrote called <a href="https://github.com/trescube/RandomStringBuilder">RandomStringBuilder</a> to generate random strings but any function that generates random strings will do. </p>
+<p>I fully admit that this is overkill for what is a relatively simple problem. These tests are mainly for practice and illustration purposes. </p>
+<h4>Tests for <code>true</code></h4>
+<p>This test generates inputs that are known to contain all unique characters, an assertion we can make because of the usage of the [<code>unique</code>](<a href="http://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Collection.html#unique()">http://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Collection.html#unique()</a>) collections method in groovy (if <code>unique</code> is broken then we have bigger things to worry about.) We have to use <code>unique</code> because RandomStringBuilder is generating random strings and could very well contain duplicates.</p>
+<pre><code class="groovy">def &quot;strings with all unique characters should return true&quot;() {
+    given:
+    def randomStringBuilder = new RandomStringBuilder()
+    def random = new Random()
+
+    and: &quot;a string of unique characters&quot;
+    def value = randomStringBuilder.atLeastOneAlphaNumeric().build().toCharArray().toList().unique().join()
+
+    expect:
+    isAllUniqueChars(value) == true
+
+    where:
+    i &lt;&lt; (1..10)
+
+}
+</code></pre>
+<p>I ran this locally and some of the generated inputs were:</p>
+<ul>
+  <li><code>A</code></li>
+  <li><code>8RNg2</code></li>
+  <li><code>1X0h</code></li>
+  <li><code>4XucoNigHzF</code></li>
+  <li><code>3yjdGO</code></li>
+  <li><code>e5m</code></li>
+  <li><code>KYSb2Tofd</code></li>
+</ul>
+<h4>Tests for <code>false</code></h4>
+<p>It's fairly easy to test the positive case by using built-in collections methods that guarantee uniqueness, but how do we generate strings that are known to have duplicate characters? One simple way would be to append the generated value to itself, so <code>abc</code> becomes <code>abcabc</code>. This approach may not cover all cases depending on your solution's algorithm, so the approach I took was to generate a random string, then splice 1 or more characters of the string back into itself at a random index. That is, if <code>a</code> is selected from <code>abc</code>, the value could become <code>aabc</code>, <code>abac</code>, or <code>abca</code>.</p>
+<pre><code class="groovy">def &quot;string with duplicate characters should return false&quot;() {
+    given:
+    def randomStringBuilder = new RandomStringBuilder()
+    def random = new Random()
+
+    and: &quot;a list of unique characters&quot;
+    def value = randomStringBuilder.atLeastOneAlphaNumeric().build().toCharArray().toList().unique()
+
+    and: &quot;1 or more duplicate characters spliced in at random indexes&quot;
+    (0..random.nextInt(10)+1).each({
+        // find a random character from the string
+        def c = value[random.nextInt(value.size())]
+
+        // find a random index to splice the duplicate character into
+        def idx = random.nextInt(value.size())
+
+        // splice in the duplicate character
+        value.add(idx, c)
+
+    })
+
+    expect:
+    isAllUniqueChars(value.join()) == false
+
+    where:
+    i &lt;&lt; (1..10)
+
+}
+</code></pre>
+<p>I ran this locally and some of the generated inputs that will return <code>false</code> were:</p>
+<ul>
+  <li><code>jydiKvYdiyi</code></li>
+  <li><code>JUmssPRPR9u</code></li>
+  <li><code>BBBBBB</code> (in this case, the initial value was just <code>B</code> that got duplicated 5 times)</li>
+  <li><code>33232H333H</code></li>
+  <li><code>i44Xi44Vyi4Xy</code></li>
+  <li><code>tOZfCay3Qt5L7Q7y</code></li>
+  <li><code>zWzvvvw99wf</code></li>
+</ul></p>
+
+	<hr />
+	
+		</div>
+		<div id="push"></div>
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">&copy; 2017 <b>Stephen Hess</b>. Powered by <a href="http://jbake.org">JBake v2.5.1</a>.</p>
+      </div>
+    </div>
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/prettify.js"></script>
+
+  </body>
+</html>

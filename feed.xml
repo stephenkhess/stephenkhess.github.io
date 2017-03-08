@@ -6,9 +6,94 @@
     <atom:link href="https://trescube.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-gb</language>
-    <pubDate>Wed, 8 Mar 2017 00:10:31 -0500</pubDate>
-    <lastBuildDate>Wed, 8 Mar 2017 00:10:31 -0500</lastBuildDate>
+    <pubDate>Wed, 8 Mar 2017 12:20:26 -0500</pubDate>
+    <lastBuildDate>Wed, 8 Mar 2017 12:20:26 -0500</lastBuildDate>
 
+    
+    <item>
+      <title>Generatively Testing for All Unique Characters</title>
+      <link>https://trescube.github.io/2017/has-all-unique-characters.html</link>
+      <pubDate>Wed, 8 Mar 2017 00:00:00 -0500</pubDate>
+      <guid isPermaLink="false">2017/has-all-unique-characters.html</guid>
+      <description>
+      &lt;p&gt;Lately I&apos;ve been going through &lt;a href=&quot;https://www.amazon.com/Cracking-Coding-Interview-Programming-Questions/dp/0984782850/ref=sr_1_1?ie=UTF8&amp;qid=1488990244&amp;sr=8-1&amp;keywords=cracking+the+coding+interview&quot;&gt;Cracking the Coding Interview&lt;/a&gt; and practicing generative testing approaches to some of the problems. This will hopefully be the first in a number of posts about the problems found in that book. I won&apos;t be posting solutions to the actual problems, but these posts will provide code and strategies for testing solutions that readers come up with. &lt;/p&gt;
+&lt;h3&gt;The Problem&lt;/h3&gt;
+&lt;p&gt;The problem in the book states: Implement an algorithm to determine if a string has all unique characters. Presumably this algorithm returns &lt;code&gt;true&lt;/code&gt; if the string has all unique characters and &lt;code&gt;false&lt;/code&gt; otherwise. For example, strings like &apos;abc&apos; would return &lt;code&gt;true&lt;/code&gt; and &lt;code&gt;aba&lt;/code&gt; would return &lt;code&gt;false&lt;/code&gt;. &lt;/p&gt;
+&lt;!--break--&gt;
+&lt;h3&gt;Generative Tests&lt;/h3&gt;
+&lt;p&gt;In my environment, the method under test is named &lt;code&gt;isAllUniqueChars&lt;/code&gt; and the tests utilize a library I wrote called &lt;a href=&quot;https://github.com/trescube/RandomStringBuilder&quot;&gt;RandomStringBuilder&lt;/a&gt; to generate random strings but any function that generates random strings will do. &lt;/p&gt;
+&lt;p&gt;I fully admit that this is overkill for what is a relatively simple problem. These tests are mainly for practice and illustration purposes. &lt;/p&gt;
+&lt;h4&gt;Tests for &lt;code&gt;true&lt;/code&gt;&lt;/h4&gt;
+&lt;p&gt;This test generates inputs that are known to contain all unique characters, an assertion we can make because of the usage of the [&lt;code&gt;unique&lt;/code&gt;](&lt;a href=&quot;http://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Collection.html#unique()&quot;&gt;http://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Collection.html#unique()&lt;/a&gt;) collections method in groovy (if &lt;code&gt;unique&lt;/code&gt; is broken then we have bigger things to worry about.) We have to use &lt;code&gt;unique&lt;/code&gt; because RandomStringBuilder is generating random strings and could very well contain duplicates.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;groovy&quot;&gt;def &amp;quot;strings with all unique characters should return true&amp;quot;() {
+    given:
+    def randomStringBuilder = new RandomStringBuilder()
+    def random = new Random()
+
+    and: &amp;quot;a string of unique characters&amp;quot;
+    def value = randomStringBuilder.atLeastOneAlphaNumeric().build().toCharArray().toList().unique().join()
+
+    expect:
+    isAllUniqueChars(value) == true
+
+    where:
+    i &amp;lt;&amp;lt; (1..10)
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I ran this locally and some of the generated inputs were:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code&gt;A&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;8RNg2&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;1X0h&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;4XucoNigHzF&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;3yjdGO&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;e5m&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;KYSb2Tofd&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;Tests for &lt;code&gt;false&lt;/code&gt;&lt;/h4&gt;
+&lt;p&gt;It&apos;s fairly easy to test the positive case by using built-in collections methods that guarantee uniqueness, but how do we generate strings that are known to have duplicate characters? One simple way would be to append the generated value to itself, so &lt;code&gt;abc&lt;/code&gt; becomes &lt;code&gt;abcabc&lt;/code&gt;. This approach may not cover all cases depending on your solution&apos;s algorithm, so the approach I took was to generate a random string, then splice 1 or more characters of the string back into itself at a random index. That is, if &lt;code&gt;a&lt;/code&gt; is selected from &lt;code&gt;abc&lt;/code&gt;, the value could become &lt;code&gt;aabc&lt;/code&gt;, &lt;code&gt;abac&lt;/code&gt;, or &lt;code&gt;abca&lt;/code&gt;.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;groovy&quot;&gt;def &amp;quot;string with duplicate characters should return false&amp;quot;() {
+    given:
+    def randomStringBuilder = new RandomStringBuilder()
+    def random = new Random()
+
+    and: &amp;quot;a list of unique characters&amp;quot;
+    def value = randomStringBuilder.atLeastOneAlphaNumeric().build().toCharArray().toList().unique()
+
+    and: &amp;quot;1 or more duplicate characters spliced in at random indexes&amp;quot;
+    (0..random.nextInt(10)+1).each({
+        // find a random character from the string
+        def c = value[random.nextInt(value.size())]
+
+        // find a random index to splice the duplicate character into
+        def idx = random.nextInt(value.size())
+
+        // splice in the duplicate character
+        value.add(idx, c)
+
+    })
+
+    expect:
+    isAllUniqueChars(value.join()) == false
+
+    where:
+    i &amp;lt;&amp;lt; (1..10)
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I ran this locally and some of the generated inputs that will return &lt;code&gt;false&lt;/code&gt; were:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;code&gt;jydiKvYdiyi&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;JUmssPRPR9u&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;BBBBBB&lt;/code&gt; (in this case, the initial value was just &lt;code&gt;B&lt;/code&gt; that got duplicated 5 times)&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;33232H333H&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;i44Xi44Vyi4Xy&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;tOZfCay3Qt5L7Q7y&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;zWzvvvw99wf&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+	  </description>
+    </item>
     
     <item>
       <title>Negative Tests for Regular Expressions</title>
